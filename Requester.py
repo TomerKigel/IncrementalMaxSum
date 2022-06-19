@@ -35,6 +35,12 @@ class Requester(Agent):
         self.offer_already_compiled = False
 
         self.max_util = max_util
+
+        self.skill_unit_value = {}
+        for key in self.skill_set.keys():
+            self.skill_unit_value[key] = self.max_util[key] / self.skill_set[key]
+
+
         self.time_per_skill_unit = time_per_skill_unit
         self.max_time = max_time
         self.rate_util_fall = rate_util_fall
@@ -51,7 +57,6 @@ class Requester(Agent):
     def full_reset(self):
         super().full_reset()
         # Algorithm results
-        self.allocated_providers = []
         self.current_budget = self.utility_budget
         self.offer_already_compiled = False
 
@@ -120,10 +125,10 @@ class Requester(Agent):
                 #     if key in self.skill_set:
                 #         if Expected_time < self.time_per_skill_unit[key]:
                 #             skills += min(value, self.skill_set[key])
-                util =0
+                util = 0
                 for i in self.neighbor_data[message[0].sender_id][1].keys():
                     if i in self.max_util.keys():
-                        util += self.neighbor_data[message[0].sender_id][1][i] * self.max_util[i]
+                        util += self.neighbor_data[message[0].sender_id][1][i] * self.skill_unit_value[i]
                 self.neighbor_util[message[0].sender_id] = util# self.update_utility_normal(message[0].sender_id,Expected_time)
                 self.original_util[message[0].sender_id] = self.neighbor_util[message[0].sender_id]
 
@@ -219,7 +224,7 @@ class Requester(Agent):
                 start = provider[1][1]
                 work_time = 0
                 if provider[1][-1] in self.time_per_skill_unit.keys():
-                    work_time = provider[1][-1]
+                    work_time = self.time_per_skill_unit[provider[1][-1]]
                 finish = provider[1][1]+work_time
                 if start == finish:
                     continue

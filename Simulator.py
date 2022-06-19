@@ -91,8 +91,9 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
     for problem in problems_input:
             copy_problem = copy.deepcopy(problem)
             mailer = MSSO_Mailer(copy_problem,mailer_iteration_termination,euclidian_distance_threshold)
+            mailer.give_max_skill_set(problem.num_skill_types)
             set_colors(copy_problem)
-            #draw_problem_graph(win,copy_problem)
+            # draw_problem_graph(win,copy_problem)
             # wait for mouse click
             #win.getMouse()
             #win.clear()
@@ -107,17 +108,34 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 
             mailer.initiate()
 
+            re_max_skills = 0
             re_max_util = 0
+            pr_max_skills = 0
             pr_max_util = 0
             for k in problem.requesters:
+                re_max_skills += sum(k.skill_set.values())#required_utility
                 re_max_util += k.required_utility
+            providers_max_skills = {}
             providers_max_util = {}
             for k in copy_problem.requesters:
                 for key in k.original_util.keys():
-                    if key not in providers_max_util:
-                        providers_max_util[key] = k.original_util[key]
-                    elif k.original_util[key] > providers_max_util[key]:
-                        providers_max_util[key] = k.original_util[key]
+                    if key not in providers_max_skills:
+                        providers_max_skills[key] = sum(k.neighbor_data[key][1].values())
+                        providers_max_util[key] = 0
+                        temp = 0
+                        for ki in k.neighbor_data[key][1].keys():
+                            if ki in k.max_util:
+                                temp += k.neighbor_data[key][1][ki] * k.skill_unit_value[ki]
+                        providers_max_util[key] = temp
+                    elif k.original_util[key] > providers_max_skills[key]:
+                        providers_max_skills[key] = sum(k.neighbor_data[key][1].values())
+                        temp = 0
+                        for ki in k.neighbor_data[key][1].keys():
+                            if ki in k.max_util:
+                                temp += k.neighbor_data[key][1][ki] * k.skill_unit_value[ki]
+                        providers_max_util[key] = temp
+            for j in providers_max_skills.keys():
+                pr_max_skills += providers_max_skills[j]
             for j in providers_max_util.keys():
                 pr_max_util += providers_max_util[j]
 
@@ -127,7 +145,7 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
             # win.clear()
             res = []
             for p in range(0,mailer_iteration_termination):
-                    # draw_problem_graph(win, copy_problem)
+                    #draw_problem_graph(win, copy_problem)
                     iter_res = mailer.iterate()
                     if res != []:
                         res.append((iter_res[0],iter_res[1] + res[-1][1]))
@@ -140,7 +158,9 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 
 
             print("max util needed:", re_max_util)
+            print("max skills needed:", re_max_skills)
             print("max util available:", pr_max_util)
+            print("max skills available:", pr_max_skills)
             utilities_per_problem.append(res)
             # utilities_per_problem.append(mailer.run())
             mx = max(utilities_per_problem[i])
@@ -158,7 +178,7 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 if __name__ == "__main__":
     # algorithm variables
     algorithm = 0  # 0=maxsum
-    mailer_iteration_termination = 150
+    mailer_iteration_termination = 300
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables

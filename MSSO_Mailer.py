@@ -19,6 +19,7 @@ class MSSO_Mailer(Mailer):
         self.dist_tresh = dist_thresh
         self.req = 0
         self.total_nclos = 0
+        self.chosen_skill = -1
 
 
     def initiate(self) -> None:
@@ -45,6 +46,9 @@ class MSSO_Mailer(Mailer):
             provider.generate_result_messages()
             provider.reset_belief()
 
+        self.chosen_skill += 1
+        if self.chosen_skill>= len(self.max_skill_set):
+            self.chosen_skill = 0
         for requester in self.Requesters.values():
                 self.fmr(requester)
                 #requester.ovp()
@@ -62,6 +66,11 @@ class MSSO_Mailer(Mailer):
             requester.reset_offers()
             #requester.generate_result_messages()
 
+    def give_max_skill_set(self,num_skill_types):
+        skill_set = {}
+        for i in range(0,num_skill_types):
+            skill_set[i] = 0
+        self.max_skill_set = skill_set
 
     def fmr(self ,requester : Requester) -> None:
         '''
@@ -69,15 +78,24 @@ class MSSO_Mailer(Mailer):
            :param requester: the agent we want to apply fmr on
            :return list: a list of neighbours to detach
         '''
-        self.req = requester#requester.id_
+        self.req = requester
         neighbours_sorted = sorted(requester.neighbor_util.items(), key = cmp_to_key(self.heuristic_function))
         selected_providers = []
         sum = 0
         for provider_tuple in neighbours_sorted:
-            res = self.ms_heuristic_function_helper(sum,requester.required_utility,requester.calculate_utility_of_agent(provider_tuple[0]))
+            requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, self.chosen_skill)
+            be = requester.final_utility()
+            t_p = copy.deepcopy(selected_providers)
+            t_p.append(provider_tuple[0])
+            requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
+            af = requester.final_utility()
+            if self.chosen_skill in requester.max_util:
+                res = self.ms_heuristic_function_helper(sum,requester.max_util[self.chosen_skill],af-be)
+            else:
+                res = self.ms_heuristic_function_helper(sum, 0, af - be)
             if res != False:
                 selected_providers.append(provider_tuple[0])
-                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers,-1)
+                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers,self.chosen_skill)
                 sum = requester.final_utility()
             else:
                 break
@@ -102,9 +120,16 @@ class MSSO_Mailer(Mailer):
             if self.Providers[i].id_ == provider2[0]:
                 this_agent2 = self.Providers[i]
 
-        if self.req.original_util[this_agent.id_] /0.7 > self.req.original_util[this_agent2.id_] :
+        agent_total_skills = 0
+        for i in self.req.neighbor_data[this_agent.id_][1].values():
+            agent_total_skills += i
+        agent_total_skills2 = 0
+        for i in self.req.neighbor_data[this_agent2.id_][1].values():
+            agent_total_skills2 += i
+
+        if agent_total_skills2  >  agent_total_skills2 :
             return -1
-        elif self.req.original_util[this_agent.id_]  < self.req.original_util[this_agent2.id_]/0.7 :
+        elif agent_total_skills  <  agent_total_skills2 :
             return 1
         else:
             if this_agent.After_fmr < this_agent2.After_fmr:
@@ -153,7 +178,7 @@ class MSSO_Mailer(Mailer):
                     requester.add_neighbour(provider)
 
     def iterate(self) -> int:
-        if self.iteration_num % 20 == 0 and self.iteration_num != 0:
+        if self.iteration_num % 50 == 0 and self.iteration_num != 0:
             self.recall(self.highest_iter)
             for provider in self.Providers.values():
                 provider.advance_time_via_choice()
@@ -164,13 +189,8 @@ class MSSO_Mailer(Mailer):
             self.detach_neighbors()
             self.assign_neighbors()
             self.initiate()
-        # if self.iteration_num == 0:
-        #     for i in range(0,5):
-        #         for provider in self.Providers.values():
-        #             provider.full_reset()
-        #         for requester in self.Requesters.values():
-        #             requester.full_reset()
-        #         self.assign_neighbors()
-        #         self.initiate()
         self.remember()
+        if self.iteration_num % 40 == 5 and self.iteration_num != 0:
+            for provider in self.Providers.values():
+                provider.up_mistake()
         return super().iterate()

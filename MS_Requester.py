@@ -70,7 +70,9 @@ class MS_Requester(Requester):
         res = {}
         for skill in self.skill_set:
             self.simulation_times_for_utility = self.construct_time_line(providers_list,skill)
-            util = self.final_utility_for_calcs()
+            t_a_p = self.construct_skill_times(self.allocated_providers,True)
+            self.simulation_times_for_utility = self.conjoin_simulation_times(t_a_p,self.simulation_times_for_utility)
+            util = self.final_utility()
             res[skill] = [util,skill]
         return res
 
@@ -158,10 +160,20 @@ class MS_Requester(Requester):
         return [table[best_alternative_index],table[best_index],table[0],best_skill]
 
     def open_mail(self) -> None:
-        self.allocated_providers.clear()
+        #self.allocated_providers.clear()
+        index = 0
+        idnex_to_del = []
+        for i in self.allocated_providers:
+            if i[-1] == False:
+                idnex_to_del.append(i)
+            index+=1
+        for i in idnex_to_del:
+            self.allocated_providers.remove(i)
+
         for message in self.inmessagebox:
             if isinstance(message, MsgProviderChoice):
-                self.allocated_providers.append((message.sender_id,message.context,message.final))
+                if (message.sender_id,message.context,message.final) not in self.allocated_providers:
+                    self.allocated_providers.append((message.sender_id,message.context,message.final))
             elif message.sender_id not in self.message_data.keys():
                 self.message_data[message.sender_id] = [0,0]
             if isinstance(message, MsgInitFromProvider):
@@ -231,3 +243,29 @@ class MS_Requester(Requester):
                 messages_to_remove.append(id)
         for i in messages_to_remove:
             del self.message_data[i]
+
+    def conjoin_simulation_times(self, t_a_p, simulation_times_for_utility):
+        for key in simulation_times_for_utility.keys():
+            index_times = 0
+            sorted_times = list(simulation_times_for_utility[key].keys())
+            sorted_times.sort()
+            if sorted_times:
+                for nkey in t_a_p[key].keys():
+                    if nkey < sorted_times[index_times]:
+                        t_a_p[key][nkey] += simulation_times_for_utility[key][sorted_times[index_times]]
+                    else:
+                        index_times+=1
+                        if index_times >= len(sorted_times):
+                            break
+
+        dict_to_append = {}
+        for key in simulation_times_for_utility.keys():
+            for nkey in t_a_p[key].keys():
+                if nkey not in simulation_times_for_utility[key]:
+                    dict_to_append[nkey] = t_a_p[key][nkey]
+        simulation_times_for_utility.update(dict_to_append)
+
+
+
+        return simulation_times_for_utility
+

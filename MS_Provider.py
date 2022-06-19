@@ -18,7 +18,7 @@ class MS_Provider(Provider):
         super().__init__(id_, problem_id, skill_set, travel_speed)
         self.Belief = {}
         self.incoming_utility_messages = []
-        self.mistake_probability = 0.1
+        self.mistake_probability = 0
         self.possible_arrival_times = []
 
         self.After_fmr = 0
@@ -32,16 +32,21 @@ class MS_Provider(Provider):
             self.graphic.move(self.total_connections[self.chosen_requester[0]][0] - self.current_location[0] , self.total_connections[self.chosen_requester[0]][1] - self.current_location[1])
             self.id_text.move(self.total_connections[self.chosen_requester[0]][0] - self.current_location[0] , self.total_connections[self.chosen_requester[0]][1] - self.current_location[1])
             self.time_invested += utils.Calculate_Distance(self.total_connections[self.chosen_requester[0]],self.current_location) / self.travel_speed
+            orig_investment = copy.copy(self.time_invested)
             self.current_location = copy.deepcopy(self.total_connections[self.chosen_requester[0]])
             if self.skill_num in self.requester_service_times[self.chosen_requester[0]]:
                 self.time_invested += self.requester_service_times[self.chosen_requester[0]][self.skill_num]
             #self.next_skill()
-            self.chosen_requesters.append(self.chosen_requester)
-            if self.skill_num in self.skill_set:
+
+            if self.skill_num in self.skill_set and self.time_invested - orig_investment != 0:
                 self.skill_set[self.skill_num] -=1
                 if self.skill_set[self.skill_num] == 0:
                     del self.skill_set[self.skill_num]
 
+            self.chosen_requesters.append(self.chosen_requester)
+
+    def up_mistake(self):
+        self.mistake_probability = 0.3
 
     def reconstruct_choice(self,choice):
         self.chosen_requester = choice
@@ -55,7 +60,7 @@ class MS_Provider(Provider):
         super().full_reset()
         self.Belief = {}
         self.incoming_utility_messages = []
-        self.mistake_probability = 0.1
+        self.mistake_probability = 0
         self.cur_iter_fmr = False
         #self.set_up_possible_arrival_times()
         for key in self.neighbor_util.keys():
@@ -147,9 +152,8 @@ class MS_Provider(Provider):
                     self.Belief[key][nkey] -= min_value
 
     def make_a_choice(self):
-        if self.Belief and self.connections:
-
-            self.chosen_requester = 0
+        self.chosen_requester = 0
+        if self.Belief and self.connections and self.skill_set:
             best_choice = None
             max_util = 0
             for key in self.connections.keys():
