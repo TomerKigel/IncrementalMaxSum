@@ -50,15 +50,8 @@ class Provider(Agent):
         return "Provider " + Agent.__str__(self)
 
     def send_init_msg(self, agent_id : int):
-        new_skill_set = copy.deepcopy(self.skill_set)
-        for choice in self.chosen_requesters:
-           if choice[0] == agent_id and choice[2] in new_skill_set.keys():
-               new_skill_set[choice[2]] -= 1
-               if new_skill_set[choice[2]] == 0:
-                    del new_skill_set[choice[2]]
-
         msg_init = MsgInitFromProvider(sender_id=self.id_,
-                                       context=[copy.deepcopy(self.current_location),copy.deepcopy(new_skill_set),copy.deepcopy(self.travel_speed),copy.deepcopy(list(self.neighbor_data.keys())),self.time_invested,self.skill_num,],
+                                       context=[copy.deepcopy(self.current_location),copy.deepcopy(self.skill_set),copy.deepcopy(self.travel_speed),copy.deepcopy(list(self.neighbor_data.keys())),self.time_invested,self.skill_num,],
                                        receiver_id=agent_id)
         self.outmessagebox.append(msg_init)
 

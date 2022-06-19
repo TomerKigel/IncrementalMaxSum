@@ -18,7 +18,7 @@ class MS_Provider(Provider):
         super().__init__(id_, problem_id, skill_set, travel_speed)
         self.Belief = {}
         self.incoming_utility_messages = []
-        self.mistake_probability = 0.3
+        self.mistake_probability = 0.1
         self.possible_arrival_times = []
 
         self.After_fmr = 0
@@ -37,10 +37,10 @@ class MS_Provider(Provider):
                 self.time_invested += self.requester_service_times[self.chosen_requester[0]][self.skill_num]
             #self.next_skill()
             self.chosen_requesters.append(self.chosen_requester)
-            # if self.skill_num in self.skill_set:
-            #     self.skill_set[self.skill_num] -=1
-            #     if self.skill_set[self.skill_num] == 0:
-            #         del self.skill_set[self.skill_num]
+            if self.skill_num in self.skill_set:
+                self.skill_set[self.skill_num] -=1
+                if self.skill_set[self.skill_num] == 0:
+                    del self.skill_set[self.skill_num]
 
 
     def reconstruct_choice(self,choice):
@@ -55,7 +55,7 @@ class MS_Provider(Provider):
         super().full_reset()
         self.Belief = {}
         self.incoming_utility_messages = []
-        self.mistake_probability = 0.3
+        self.mistake_probability = 0.1
         self.cur_iter_fmr = False
         #self.set_up_possible_arrival_times()
         for key in self.neighbor_util.keys():
@@ -148,17 +148,13 @@ class MS_Provider(Provider):
 
     def make_a_choice(self):
         if self.Belief and self.connections:
-            new_skill_set = copy.deepcopy(self.skill_set)
-            for choice in self.chosen_requesters:
-                if choice[2] == self.skill_num:
-                    new_skill_set[choice[2]] -= 1
 
             self.chosen_requester = 0
             best_choice = None
             max_util = 0
             for key in self.connections.keys():
                 for nkey in self.Belief[key]:
-                    if self.Belief[key][nkey] >= max_util and new_skill_set[nkey] > 0:
+                    if self.Belief[key][nkey] >= max_util:
                         max_util = self.Belief[key][nkey]
                         best_choice = [key,nkey]
 
@@ -171,16 +167,12 @@ class MS_Provider(Provider):
                     self.skill_num = -1
 
 
-
-                if self.skill_num != -1:
-                    if new_skill_set[self.skill_num] > 0:
-                        if self.chosen_requester != 0:
-                            Choice = MsgProviderChoice(self.id_,chosen_requester[0],chosen_requester,False)
-                            self.outmessagebox.append(Choice)
-                    else:
-                        self.chosen_requester = None
-                else:
-                    self.chosen_requester = None
+            if self.skill_num != -1:
+                    if self.chosen_requester != 0:
+                        Choice = MsgProviderChoice(self.id_,chosen_requester[0],chosen_requester,False)
+                        self.outmessagebox.append(Choice)
+            else:
+                self.chosen_requester = None
 
         for element in self.chosen_requesters:
             Choice = MsgProviderChoice(self.id_, element[0], element,True)

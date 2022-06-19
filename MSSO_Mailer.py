@@ -153,7 +153,7 @@ class MSSO_Mailer(Mailer):
                     requester.add_neighbour(provider)
 
     def iterate(self) -> int:
-        if self.iteration_num % 8 == 0 and self.iteration_num != 0:
+        if self.iteration_num % 20 == 0 and self.iteration_num != 0:
             self.recall(self.highest_iter)
             for provider in self.Providers.values():
                 provider.advance_time_via_choice()

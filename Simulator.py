@@ -127,15 +127,15 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
             # win.clear()
             res = []
             for p in range(0,mailer_iteration_termination):
-                    #draw_problem_graph(win, copy_problem)
+                    # draw_problem_graph(win, copy_problem)
                     iter_res = mailer.iterate()
                     if res != []:
                         res.append((iter_res[0],iter_res[1] + res[-1][1]))
                     else:
                         res.append(iter_res)
                     #win.update()
-                    #time.sleep(0.5)
-                    #win.clear()
+                    # time.sleep(0.5)
+                    # win.clear()
 
 
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 30
+    number_of_problems = 1
     number_of_providers = 10
     number_of_requesters = 15
     location_min_x = 1
@@ -230,12 +230,14 @@ if __name__ == "__main__":
 
 
 
-    for i in range(0,len(utilities_per_problem[0][0])):
+    for i in range(0,len(nclo_stamps)):
         avg.append(0)
 
     for problem_utils in utilities_per_problem:
         index = 0
         for i in problem_utils[0]:
+            if index >= len(nclo_stamps):
+                break
             avg[index] += i[0]
             index += 1
     for i in range(0,len(avg)):
