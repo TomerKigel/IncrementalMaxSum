@@ -17,6 +17,7 @@ class MS_Requester(Requester):
         self.relationship_health = {}
         self.mistake_probability = 0.1
 
+
     def full_reset(self):
         super().full_reset()
         self.offer = {}

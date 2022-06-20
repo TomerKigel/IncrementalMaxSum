@@ -113,6 +113,9 @@ class MSSO_Mailer(Mailer):
 
 
     def heuristic_function(self,provider1 : tuple,provider2 : tuple) -> int:
+
+
+
         for i in self.Providers.keys():
             if self.Providers[i].id_ == provider1[0]:
                 this_agent = self.Providers[i]
@@ -150,7 +153,7 @@ class MSSO_Mailer(Mailer):
 
 
     def ms_heuristic_function_helper(self,sum : int,target_sum :int,add_val : int) -> Any:
-        if target_sum > sum:
+        if target_sum >= sum:
             return add_val
         else:
             return False

@@ -103,8 +103,8 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
             #win.clear()
 
             #show result of iteration
-            for p in copy_problem.providers:
-                p.make_a_choice()
+            # for p in copy_problem.providers:
+            #     p.make_a_choice()
 
             mailer.initiate()
 
@@ -187,10 +187,7 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
             #
             # print(s)
 
-            #draw_problem_graph(win, copy_problem)
-            # # wait for mouse click
-            # win.getMouse()
-            # win.clear()
+
             res = []
             for p in range(0,mailer_iteration_termination):
                     #draw_problem_graph(win, copy_problem)
@@ -215,8 +212,7 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
             print(mx)
             all_porbs.append((utilities_per_problem))
 
-            #wait for mouse click
-            #win.getMouse()
+
             i+=1
 
 
@@ -230,7 +226,7 @@ if __name__ == "__main__":
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 30
+    number_of_problems = 1
     number_of_providers = 10
     number_of_requesters = 15
     location_min_x = 1
@@ -290,9 +286,7 @@ if __name__ == "__main__":
             for i in nclo_stamps:
                 x = [item for item in utils if item[1] == i]
                 if x == []:
-                #while i[1] > nclo_stamps[index_in_nclso]:
-                #    if i[1] > nclo_stamps[index_in_nclso]:
-                    utils.append((utils[index_in_nclso][0],i))#nclo_stamps[index_in_nclso]))
+                    utils.append((utils[index_in_nclso][0],i))
                     index_in_nclso += 1
             utils.sort(key=lambda y: y[1])
 
@@ -319,7 +313,6 @@ if __name__ == "__main__":
         if util > max:
             max = util
         any_time.append(max)
-    #problem_utils.sort(reverse=True)
     plot_xy_graph(any_time, nclo_stamps)
 
     pandas.DataFrame((any_time,nclo_stamps)).to_csv('anytime.csv')
