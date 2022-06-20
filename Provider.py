@@ -27,20 +27,6 @@ class Provider(Agent):
 
         id_text = 0
 
-    def next_skill(self):
-        skill_lst = list(self.skill_set.keys())
-        found = False
-        orig_skill = copy.copy(self.skill_num)
-        for i in skill_lst:
-            if found:
-                self.skill_num = i
-                break
-            if i == self.skill_num:
-                found = True
-
-        if orig_skill == self.skill_num:
-            self.skill_num = skill_lst[0]
-
     def full_reset(self):
         super().full_reset()
         # Algorithm results
@@ -57,17 +43,7 @@ class Provider(Agent):
 
     def init_relationships(self):
         for message in self.incoming_setupmessages:
-            #self.neighbor_data[message.sender_id] = message.context
             self.requester_service_times[message.sender_id] = message.context
-
-    # def remove_neighbour(self, agent) -> None:
-    #     super().remove_neighbour(agent)
-    #     if type(agent) == int:
-    #         if agent in self.neighbor_data:
-    #             del self.neighbor_data[agent]
-    #     else:
-    #         if agent.id_ in self.neighbor_data:
-    #             del self.neighbor_data[agent.id_]
 
     def make_a_choice(self):
         raise NotImplementedError()

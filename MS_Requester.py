@@ -46,7 +46,7 @@ class MS_Requester(Requester):
         table.append(list(assignments.keys()))
         amount_of_lines = 1
         for neighbour in assignments.keys():
-            amount_of_lines *= 2#len(assignments[neighbour])
+            amount_of_lines *= 2
         permutation = utils.truth_table(assignments, amount_of_lines)
         for line in range (0,amount_of_lines):
             table.append(permutation[line])
@@ -66,7 +66,6 @@ class MS_Requester(Requester):
             if key == 1:
                 providers_list.append(table[0][index])
             index += 1
-        max_util = 0
         res = {}
         for skill in self.skill_set:
             self.simulation_times_for_utility = self.construct_time_line(providers_list,skill)
@@ -89,6 +88,7 @@ class MS_Requester(Requester):
 
     def construct_time_line(self, providers_list,skill):
         list_of_arrivals = []
+        index = 0
         for provider in providers_list:
             prov_location = self.neighbor_data[provider][0]
             prov_speed = self.neighbor_data[provider][2]
@@ -98,7 +98,8 @@ class MS_Requester(Requester):
             elif self.neighbor_data[provider][1][skill] == 0:
                 list_of_arrivals.append((provider, (self.id_, arrival_time,self.neighbor_data[provider][-1])))
             else:
-                 list_of_arrivals.append((provider,(self.id_,arrival_time,skill)))#self.neighbor_data[provider][-1])))
+                 list_of_arrivals.append((provider,(self.id_,arrival_time,skill)))
+            index +=1
         return self.construct_skill_times(list_of_arrivals,False)
 
     def add_beliefs(self,table : list):
@@ -160,7 +161,6 @@ class MS_Requester(Requester):
         return [table[best_alternative_index],table[best_index],table[0],best_skill]
 
     def open_mail(self) -> None:
-        #self.allocated_providers.clear()
         index = 0
         idnex_to_del = []
         for i in self.allocated_providers:
@@ -202,8 +202,6 @@ class MS_Requester(Requester):
             self.send_offer_msg(neighbour)
 
     def compile_offers(self,selected_case : list,provider : int):
-        calculated_offers = 0
-        max_util = 0
         case_index = 0
         for i in selected_case[2]:
             if i == provider:
@@ -212,7 +210,7 @@ class MS_Requester(Requester):
 
         diff = selected_case[1][-1][selected_case[-1]][0] - selected_case[0][-1][selected_case[-1]][0]
         if diff > 0 and selected_case[1][case_index] == 1:
-            calculated_offers = (selected_case[1][-1][selected_case[-1]][0] ,selected_case[1][-1][selected_case[-1]][1])
+            calculated_offers = (0.1*selected_case[1][-1][selected_case[-1]][0] ,selected_case[1][-1][selected_case[-1]][1])
         else:
             calculated_offers = (0,selected_case[1][-1][selected_case[-1]][1])
         self.offer[provider] = calculated_offers

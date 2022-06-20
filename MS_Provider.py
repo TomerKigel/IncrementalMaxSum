@@ -36,7 +36,6 @@ class MS_Provider(Provider):
             self.current_location = copy.deepcopy(self.total_connections[self.chosen_requester[0]])
             if self.skill_num in self.requester_service_times[self.chosen_requester[0]]:
                 self.time_invested += self.requester_service_times[self.chosen_requester[0]][self.skill_num]
-            #self.next_skill()
 
             if self.skill_num in self.skill_set and self.time_invested - orig_investment != 0:
                 self.skill_set[self.skill_num] -=1
@@ -62,7 +61,6 @@ class MS_Provider(Provider):
         self.incoming_utility_messages = []
         self.mistake_probability = 0
         self.cur_iter_fmr = False
-        #self.set_up_possible_arrival_times()
         for key in self.neighbor_util.keys():
             self.Belief[key] = {}
             for skill in self.skill_set:
@@ -90,7 +88,6 @@ class MS_Provider(Provider):
         self.open_mail()
         self.update_belief()
         self.normalize_belief_vector()
-        #self.act_human()
         self.make_a_choice()
         self.generate_result_messages()
 
@@ -103,7 +100,6 @@ class MS_Provider(Provider):
             self.send_belief_msg(neighbour)
 
     def reset_belief(self):
-        #self.Belief.clear()
         for key in self.neighbor_util.keys():
             self.Belief[key] = {}
             for skill in self.skill_set:
@@ -111,7 +107,7 @@ class MS_Provider(Provider):
 
 
     def update_belief(self):
-        # damping (add later)
+        # damping
         for key in self.Belief.keys():
             for nkey in self.Belief[key]:
                 self.Belief[key][nkey] *= 0.01
@@ -125,17 +121,6 @@ class MS_Provider(Provider):
                         self.Belief[offer_dict.sender_id][offer_dict.context[1]] += offer_dict.context[0] * 0.99
 
         self.incoming_utility_messages.clear()
-
-
-    # def act_human(self):
-    #     '''
-    #    Novelty
-    #    '''
-    #
-    #     if random.random() > 1 - self.mistake_probability:
-    #         for key in self.Belief.keys():
-    #             for i in range(0,int(random.random() * 5)):
-    #                 utils.rotate_dict(self.Belief)
 
 
     def normalize_belief_vector(self):
@@ -208,42 +193,3 @@ class MS_Provider(Provider):
             del self.message_data[i]
 
 
-
-    # def set_up_possible_arrival_times(self):
-    #     possible_times = []
-    #     conkeys = list(self.connections.keys())
-    #     for key in conkeys:
-    #         newconkey = copy.deepcopy(conkeys)
-    #         newconkey.remove(key)
-    #         if newconkey == []:
-    #             possible_times.append([key])
-    #             break
-    #         tempres = []
-    #         utils.heapPermutation(newconkey,len(newconkey),tempres)
-    #         for i in tempres:
-    #             i.insert(0,key)
-    #         possible_times.extend(tempres)
-    #     ord_num = 0
-    #     for order in possible_times:
-    #         self.possible_arrival_times.append([])
-    #         place_in_order = 0
-    #         for id in order:
-    #             if place_in_order == 0:
-    #                 self.possible_arrival_times[ord_num].append((id,utils.Calculate_Distance(self.current_location, self.connections[id])/self.travel_speed))
-    #             else:
-    #                 self.possible_arrival_times[ord_num].append((id, self.requester_service_times[order[place_in_order-1]]+self.possible_arrival_times[ord_num][len(self.possible_arrival_times[ord_num])-1][1]+(utils.Calculate_Distance(self.connections[order[place_in_order-1]],self.connections[id])/self.travel_speed)))
-    #             place_in_order+=1
-    #         ord_num +=1
-    #
-    #
-    #
-    #
-    # def Decay_Function(self,requester_id,Util_Decay_Func):
-    #     res = []
-    #
-    #     for line in self.possible_arrival_times:
-    #         for elem in line:
-    #             if elem[0] == requester_id:
-    #                 res.append((elem[1],Util_Decay_Func(elem[1])))
-    #
-    #     return res

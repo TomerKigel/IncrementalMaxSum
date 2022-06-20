@@ -78,7 +78,6 @@ class Mailer():
         utility_sum = 0
         for requester in self.Requesters.values():
             utility_sum += requester.final_utility_orig()
-            requester.reset_budget()
         return utility_sum
 
     def remove_connection_by_reference(self,provider : Agent,requster : Agent) -> None:

@@ -90,7 +90,7 @@ class MSSO_Mailer(Mailer):
             requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
             af = requester.final_utility()
             if self.chosen_skill in requester.max_util:
-                res = self.ms_heuristic_function_helper(sum,requester.max_util[self.chosen_skill],af-be)
+                res = self.ms_heuristic_function_helper(sum,requester.skill_unit_value[self.chosen_skill],af-be)
             else:
                 res = self.ms_heuristic_function_helper(sum, 0, af - be)
             if res != False:
@@ -120,22 +120,32 @@ class MSSO_Mailer(Mailer):
             if self.Providers[i].id_ == provider2[0]:
                 this_agent2 = self.Providers[i]
 
-        agent_total_skills = 0
-        for i in self.req.neighbor_data[this_agent.id_][1].values():
-            agent_total_skills += i
-        agent_total_skills2 = 0
-        for i in self.req.neighbor_data[this_agent2.id_][1].values():
-            agent_total_skills2 += i
-
-        if agent_total_skills2  >  agent_total_skills2 :
-            return -1
-        elif agent_total_skills  <  agent_total_skills2 :
+        if utils.Calculate_Distance(self.req.current_location,this_agent.current_location) /0.7 > utils.Calculate_Distance(self.req.current_location,this_agent2.current_location):
             return 1
+        elif utils.Calculate_Distance(self.req.current_location,this_agent2.current_location) /0.7 > utils.Calculate_Distance(self.req.current_location,this_agent.current_location):
+            return -1
         else:
             if this_agent.After_fmr < this_agent2.After_fmr:
                 return -1
             else:# this_agent.After_fmr > this_agent2.After_fmr:
                 return 1
+
+        # agent_total_skills = 0
+        # for i in self.req.neighbor_data[this_agent.id_][1].values():
+        #     agent_total_skills += i
+        # agent_total_skills2 = 0
+        # for i in self.req.neighbor_data[this_agent2.id_][1].values():
+        #     agent_total_skills2 += i
+        #
+        # if agent_total_skills2  >  agent_total_skills2 :
+        #     return -1
+        # elif agent_total_skills  <  agent_total_skills2 :
+        #     return 1
+        # else:
+        #     if this_agent.After_fmr < this_agent2.After_fmr:
+        #         return -1
+        #     else:# this_agent.After_fmr > this_agent2.After_fmr:
+        #         return 1
 
 
 
@@ -185,12 +195,11 @@ class MSSO_Mailer(Mailer):
                 provider.full_reset()
             for requester in self.Requesters.values():
                 requester.full_reset()
-                requester.turn_update_on()
             self.detach_neighbors()
             self.assign_neighbors()
             self.initiate()
         self.remember()
-        if self.iteration_num % 40 == 5 and self.iteration_num != 0:
+        if self.iteration_num % 50 == 5 and self.iteration_num != 0:
             for provider in self.Providers.values():
                 provider.up_mistake()
         return super().iterate()
