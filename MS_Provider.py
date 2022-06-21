@@ -110,7 +110,7 @@ class MS_Provider(Provider):
         # damping
         for key in self.Belief.keys():
             for nkey in self.Belief[key]:
-                self.Belief[key][nkey] *= 0.01
+                self.Belief[key][nkey] *= 0.2
         #update
         res = {}
         for offer_dict in self.incoming_utility_messages:
@@ -118,7 +118,7 @@ class MS_Provider(Provider):
                     if random.random() > 1 - self.mistake_probability:
                         offer_dict.sender_id = random.sample(list(self.Belief.keys()),1)[0]
                     if offer_dict.context[1] in self.Belief[offer_dict.sender_id]:
-                        self.Belief[offer_dict.sender_id][offer_dict.context[1]] += offer_dict.context[0] * 0.99
+                        self.Belief[offer_dict.sender_id][offer_dict.context[1]] += offer_dict.context[0] * 0.8
 
         self.incoming_utility_messages.clear()
 

@@ -41,14 +41,16 @@ class MS_Requester(Requester):
         return output
 
 
-    def create_value_table(self) -> list:
+    def create_value_table(self,provider) -> list:
         assignments = self.assemble_neighbour_assignments()
         table = []
-        table.append(list(assignments.keys()))
+        keylist = list(assignments.keys())
+        keylist.remove(provider)
+        table.append(keylist)
         amount_of_lines = 1
-        for neighbour in assignments.keys():
+        for neighbour in keylist:
             amount_of_lines *= 2
-        permutation = utils.truth_table(assignments, amount_of_lines)
+        permutation = utils.truth_table(keylist, amount_of_lines)
         for line in range (0,amount_of_lines):
             table.append(permutation[line])
             table[line+1].append(self.case_utility(table,line+1,"marginal utility"))
@@ -103,10 +105,11 @@ class MS_Requester(Requester):
             index +=1
         return self.construct_skill_times(list_of_arrivals,False)
 
-    def add_beliefs(self,table : list):
+    def add_beliefs(self,table : list,provider):
         agents_beliefs = {}
         for key in self.connections.keys():
-            agents_beliefs[key] = self.message_data[key][1].context
+            if key != provider:
+                agents_beliefs[key] = self.message_data[key][1].context
 
         max_belief = {}
         for key in agents_beliefs.keys():
@@ -130,17 +133,48 @@ class MS_Requester(Requester):
                             table[i][-1][skill_num][0] += max_belief[table[0][elem]]
         return table
 
+    def remove_belief(self,table : list,provider):
+
+        gtable = copy.deepcopy(table)
+        agents_beliefs = {}
+        for key in self.connections.keys():
+            agents_beliefs[key] = self.message_data[key][1].context
+
+        max_belief = {}
+        for key in agents_beliefs.keys():
+            max_belief[key] = 0
+            for nkey in agents_beliefs.keys():
+                if nkey != key:
+                    for v in agents_beliefs[nkey].keys():
+                        for j in agents_beliefs[nkey][v].keys():
+                            if agents_beliefs[nkey][v][j] > max_belief[key]:
+                                max_belief[key] = agents_beliefs[nkey][v][j]
+
+        for i in range(1,len(table)):
+            for elem in range(0,len(table[i])-1):
+                if gtable[0][elem] == provider:
+                    if gtable[i][elem] == 1 and agents_beliefs[gtable[0][elem]]:
+                        for skill_num in self.skill_set:
+                            if skill_num in agents_beliefs[gtable[0][elem]][self.id_]:
+                                gtable[i][-1][skill_num][0] -= agents_beliefs[gtable[0][elem]][self.id_][skill_num]
+                    else:
+                        for skill_num in self.skill_set:
+                            if skill_num in agents_beliefs[gtable[0][elem]][self.id_]:
+                                gtable[i][-1][skill_num][0] -= max_belief[gtable[0][elem]]
+        return gtable
+
     def select_best_values(self,table : list,provider : int) -> list:
-        provider_index = 0
-        idx = 0
-        for i in table[0]:
-            if i == provider:
-                provider_index = idx
-            idx +=1
+        # provider_index = 0
+        # idx = 0
+        # for i in table[0]:
+        #     if i == provider:
+        #         provider_index = idx
+        #     idx +=1
 
         max_util = 0
         best_index = 0
         index = 0
+        best_skill = -1
         for line in table:
             if index == 0:
                 index += 1
@@ -153,13 +187,14 @@ class MS_Requester(Requester):
                         max_util = item[0]
             index += 1
 
-        multip = 1
-        for i in range(len(table[0])-provider_index-1):
-            multip *= 2
-        if table[best_index][provider_index] == 0:
-            multip *= -1
-        best_alternative_index = best_index - multip
-        return [table[best_alternative_index],table[best_index],table[0],best_skill]
+        # multip = 1
+        # for i in range(len(table[0])-provider_index-1):
+        #     multip *= 2
+        # if table[best_index][provider_index] == 0:
+        #     multip *= -1
+        # best_alternative_index = best_index - multip
+        #return [table[best_alternative_index],table[best_index],table[0],best_skill]
+        return [table[best_index],table[0],best_skill]
 
     def open_mail(self) -> None:
         index = 0
@@ -187,9 +222,10 @@ class MS_Requester(Requester):
     def compute(self):
         self.open_mail()
         self.nclo = len(self.connections) * len(self.connections)
-        produced_table = self.create_value_table()
-        produced_table = self.add_beliefs(produced_table)
         for provider in self.connections.keys():
+            produced_table = self.create_value_table(provider)
+            produced_table = self.add_beliefs(produced_table,provider)
+            #produced_table = self.remove_belief(produced_table,provider)
             selected_case = self.select_best_values(produced_table,provider)
             self.compile_offers(selected_case,provider)
             self.send_offer_msg(provider)
@@ -203,17 +239,38 @@ class MS_Requester(Requester):
             self.send_offer_msg(neighbour)
 
     def compile_offers(self,selected_case : list,provider : int):
-        case_index = 0
-        for i in selected_case[2]:
-            if i == provider:
-                break
-            case_index+=1
+        # case_index = 0
+        # for i in selected_case[2]:
+        #     if i == provider:
+        #         break
+        #     case_index+=1
+        if selected_case[-1] == -1:
+            return
+        providers_list = []
+        for i in range(0,len(selected_case[0])-1):
+            if selected_case[0][i] == 1:
+                providers_list.append(selected_case[1][i])
+        self.simulation_times_for_utility = self.construct_time_line(providers_list, selected_case[-1])
+        before_assignment = self.final_utility()
 
-        diff = selected_case[1][-1][selected_case[-1]][0] - selected_case[0][-1][selected_case[-1]][0]
-        if diff > 0 and selected_case[1][case_index] == 1:
-            calculated_offers = (0.1*selected_case[1][-1][selected_case[-1]][0] ,selected_case[1][-1][selected_case[-1]][1])
+        providers_list.append(provider)
+        self.simulation_times_for_utility = self.construct_time_line(providers_list, selected_case[-1])
+        after_assignment  = self.final_utility()
+
+        if after_assignment - before_assignment <= 0:
+            calculated_offers = (0,selected_case[-1])
         else:
-            calculated_offers = (0,selected_case[1][-1][selected_case[-1]][1])
+            # agents_belief = self.message_data[provider][1].context
+            # if selected_case[-1] in agents_belief:
+            calculated_offers = (1*(selected_case[0][-1][selected_case[-1]][0]),selected_case[-1] )
+            # else:
+            #     calculated_offers = (0.1*(selected_case[0][-1][selected_case[-1]][0]) ,selected_case[-1])
+
+        # diff = selected_case[1][-1][selected_case[-1]][0] - selected_case[0][-1][selected_case[-1]][0]
+        # if diff > 0 and selected_case[1][case_index] == 1:
+        #     calculated_offers = (0.1*selected_case[1][-1][selected_case[-1]][0] ,selected_case[1][-1][selected_case[-1]][1])
+        # else:
+        #     calculated_offers = (0,selected_case[1][-1][selected_case[-1]][1])
         self.offer[provider] = calculated_offers
 
     def calculate_required_utility(self):

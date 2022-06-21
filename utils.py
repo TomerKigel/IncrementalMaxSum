@@ -63,7 +63,7 @@ def travel_time(start_location, end_location,travel_speed) -> float:
 #     res[value] = row
 #     return res
 
-def truth_table(source : dict,value : int) -> dict:
+def truth_table(source : list,value : int) -> dict:
     res = {}
     row = [0 for i in range(0,len(source))]
     for i in range(value):
@@ -76,7 +76,7 @@ def truth_table(source : dict,value : int) -> dict:
             row[-j] = 0
             j+=1
             row[-j] += 1
-    row = [i for i in source.keys()]
+    row = [i for i in source]
     res[value] = row
     return res
 
