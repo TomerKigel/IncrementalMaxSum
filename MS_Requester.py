@@ -129,7 +129,6 @@ class MS_Requester(Requester):
                             table[i][-1][skill_num][0] += agents_beliefs[table[0][elem]][self.id_][skill_num]
                 else:
                     for skill_num in self.skill_set:
-                        if skill_num in agents_beliefs[table[0][elem]][self.id_]:
                             table[i][-1][skill_num][0] += max_belief[table[0][elem]]
         return table
 
