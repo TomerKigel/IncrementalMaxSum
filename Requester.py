@@ -47,7 +47,6 @@ class Requester(Agent):
         # Algorithm results
         self.allocated_providers = []
 
-        self.bo = False
         id_text = 0
 
     def __str__(self):

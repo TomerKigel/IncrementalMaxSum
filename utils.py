@@ -46,23 +46,6 @@ def travel_time(start_location, end_location,travel_speed) -> float:
     distance_in_time = distance / travel_speed
     return distance_in_time
 
-# def truth_table(source : dict,value : int) -> dict:
-#     res = {}
-#     row = [0 for i in range(0,len(source))]
-#     for i in range(value):
-#         res[i] = copy.deepcopy(row)
-#         if i == value -1:
-#             break
-#         j = 1
-#         row[-j] += 1
-#         while row[-j] == 2:
-#             row[-j] = 0
-#             j+=1
-#             row[-j] += 1
-#     row = [i for i in source.keys()]
-#     res[value] = row
-#     return res
-
 def truth_table(source : list,value : int) -> dict:
     res = {}
     row = [0 for i in range(0,len(source))]
@@ -116,7 +99,7 @@ def rotate_dict(dic : dict) -> dict:
     return dic
 
 
-def heapPermutation(id_list, size , lst , iteration = 0):
+def heapPermutation(id_list, size , lst ):
     # if size becomes 1 then prints the obtained
     # permutation
     if len(lst) > 100:

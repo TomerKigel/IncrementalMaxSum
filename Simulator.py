@@ -1,6 +1,7 @@
 import copy
 
 import pandas
+from tqdm import tqdm
 
 from MSSO_Mailer import MSSO_Mailer
 from Problem import Problem
@@ -84,32 +85,21 @@ def draw_problem_graph(win : GraphWin, problem : Problem):
                 thisline.setOutline("red")
 
 # creates mailer and solves problems
+
 def solve_problems(win,problems_input, mailer_iteration_termination):
     all_porbs = []
     utilities_per_problem = []
     i = 0
-    for problem in problems_input:
+    for problem in tqdm(problems_input):
             copy_problem = copy.deepcopy(problem)
             mailer = MSSO_Mailer(copy_problem,mailer_iteration_termination,euclidian_distance_threshold)
             mailer.give_max_skill_set(problem.num_skill_types)
             set_colors(copy_problem)
-            # draw_problem_graph(win,copy_problem)
-            # wait for mouse click
-            #win.getMouse()
-            #win.clear()
-            #fmr
-            #draw_problem_graph(win, copy_problem)
-            #win.getMouse()
-            #win.clear()
-
-            #show result of iteration
-            # for p in copy_problem.providers:
-            #     p.make_a_choice()
 
             mailer.initiate()
 
             res = []
-            for p in range(0,mailer_iteration_termination):
+            for p in tqdm(range(0,mailer_iteration_termination)):
                     #draw_problem_graph(win, copy_problem)
                     iter_res = mailer.iterate()
                     if res != []:
@@ -119,22 +109,11 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
                     #win.update()
                     # time.sleep(0.5)
                     # win.clear()
-
-
-
-            # print("max util needed:", re_max_util)
-            # print("max skills needed:", re_max_skills)
-            # print("max util available:", pr_max_util)
-            # print("max skills available:", pr_max_skills)
             utilities_per_problem.append(res)
-            # utilities_per_problem.append(mailer.run())
             mx = max(utilities_per_problem[i])
             print(mx)
             all_porbs.append((utilities_per_problem))
-
-
             i+=1
-
 
     return all_porbs
 

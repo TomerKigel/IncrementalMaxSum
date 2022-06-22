@@ -19,7 +19,6 @@ class MSSO_Mailer(Mailer):
         self.dist_tresh = dist_thresh
         self.req = 0
         self.total_nclos = 0
-        self.chosen_skill = -1
 
 
     def initiate(self) -> None:
@@ -39,22 +38,17 @@ class MSSO_Mailer(Mailer):
             requester.open_mail()
             requester.init_relationships()
             requester.reset_offers()
-            #requester.generate_result_messages()
         for provider in self.Providers.values():
             provider.open_mail()
             provider.init_relationships()
             provider.generate_result_messages()
             provider.reset_belief()
 
-        self.chosen_skill += 1
-        if self.chosen_skill>= len(self.max_skill_set):
-            self.chosen_skill = 0
+
         for requester in self.Requesters.values():
                 self.fmr(requester)
-                #requester.ovp()
 
         for provider in self.Providers.values():
-            #provider.set_up_possible_arrival_times()
             provider.reset_belief()
             for neighbour in provider.neighbor_data.keys():
                 provider.send_init_msg(neighbour)
@@ -64,13 +58,7 @@ class MSSO_Mailer(Mailer):
             requester.init_relationships()
             requester.ovp()
             requester.reset_offers()
-            #requester.generate_result_messages()
 
-    def give_max_skill_set(self,num_skill_types):
-        skill_set = {}
-        for i in range(0,num_skill_types):
-            skill_set[i] = 0
-        self.max_skill_set = skill_set
 
     def fmr(self ,requester : Requester) -> None:
         '''
@@ -114,26 +102,8 @@ class MSSO_Mailer(Mailer):
         else:
             if this_agent.After_fmr < this_agent2.After_fmr:
                 return -1
-            else:# this_agent.After_fmr > this_agent2.After_fmr:
+            else:
                 return 1
-
-        # agent_total_skills = 0
-        # for i in self.req.neighbor_data[this_agent.id_][1].values():
-        #     agent_total_skills += i
-        # agent_total_skills2 = 0
-        # for i in self.req.neighbor_data[this_agent2.id_][1].values():
-        #     agent_total_skills2 += i
-        #
-        # if agent_total_skills2  >  agent_total_skills2 :
-        #     return -1
-        # elif agent_total_skills  <  agent_total_skills2 :
-        #     return 1
-        # else:
-        #     if this_agent.After_fmr < this_agent2.After_fmr:
-        #         return -1
-        #     else:# this_agent.After_fmr > this_agent2.After_fmr:
-        #         return 1
-
 
 
     def ms_heuristic_function_helper(self,sum : int,target_sum :int,add_val : int) -> Any:

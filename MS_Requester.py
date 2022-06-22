@@ -15,7 +15,6 @@ class MS_Requester(Requester):
         self.offer = {}
         self.util_message_data = {}
         self.relationship_health = {}
-        self.mistake_probability = 0.1
         self.internal_fmr = {}
         for skill in self.skill_set:
             self.internal_fmr[skill] = [i for i in self.connections]
@@ -25,7 +24,6 @@ class MS_Requester(Requester):
         super().full_reset()
         self.offer = {}
         self.util_message_data = {}
-        self.mistake_probability = 0.1
 
 
     def reset_offers(self):
@@ -49,7 +47,6 @@ class MS_Requester(Requester):
         assignments = self.assemble_neighbour_assignments(skill,provider)
         table = []
         keylist = list(assignments.keys())
-        #keylist.remove(provider)
         table.append(keylist)
         amount_of_lines = 1
         for neighbour in keylist:
@@ -62,7 +59,6 @@ class MS_Requester(Requester):
         return table
 
     def case_utility(self,table : list[int],line : int,policy : string,skill) -> int:
-        util = 0
         if policy == "marginal utility":
             pass
         else:
@@ -79,17 +75,6 @@ class MS_Requester(Requester):
         self.simulation_times_for_utility = self.conjoin_simulation_times(t_a_p,self.simulation_times_for_utility)
         util = self.final_utility()
         return util
-
-    def ovp(self):
-        curerent_util = 0
-        for key in self.neighbor_util.keys():
-            curerent_util += self.neighbor_util[key]
-
-        diff = 0
-        if curerent_util > self.required_utility:
-            diff = curerent_util - self.required_utility
-        for key in self.neighbor_util.keys():
-            self.neighbor_util[key] -= diff / len(self.neighbor_util)
 
     def construct_time_line(self, providers_list,skill):
         list_of_arrivals = []
@@ -132,48 +117,10 @@ class MS_Requester(Requester):
                     table[i][-1] += max_belief[table[0][elem]]
         return table
 
-    def remove_belief(self,table : list,provider):
-
-        gtable = copy.deepcopy(table)
-        agents_beliefs = {}
-        for key in self.connections.keys():
-            agents_beliefs[key] = self.message_data[key][1].context
-
-        max_belief = {}
-        for key in agents_beliefs.keys():
-            max_belief[key] = 0
-            for nkey in agents_beliefs.keys():
-                if nkey != key:
-                    for v in agents_beliefs[nkey].keys():
-                        for j in agents_beliefs[nkey][v].keys():
-                            if agents_beliefs[nkey][v][j] > max_belief[key]:
-                                max_belief[key] = agents_beliefs[nkey][v][j]
-
-        for i in range(1,len(table)):
-            for elem in range(0,len(table[i])-1):
-                if gtable[0][elem] == provider:
-                    if gtable[i][elem] == 1 and agents_beliefs[gtable[0][elem]]:
-                        for skill_num in self.skill_set:
-                            if skill_num in agents_beliefs[gtable[0][elem]][self.id_]:
-                                gtable[i][-1][skill_num][0] -= agents_beliefs[gtable[0][elem]][self.id_][skill_num]
-                    else:
-                        for skill_num in self.skill_set:
-                            if skill_num in agents_beliefs[gtable[0][elem]][self.id_]:
-                                gtable[i][-1][skill_num][0] -= max_belief[gtable[0][elem]]
-        return gtable
-
-    def select_best_values(self,table : list,provider : int) -> list:
-        # provider_index = 0
-        # idx = 0
-        # for i in table[0]:
-        #     if i == provider:
-        #         provider_index = idx
-        #     idx +=1
-
+    def select_best_values(self,table : list) -> list:
         max_util = 0
         best_index = 0
         index = 0
-        best_skill = -1
         for line in table:
             if index == 0:
                 index += 1
@@ -184,13 +131,6 @@ class MS_Requester(Requester):
                     max_util = line[-1]
             index += 1
 
-        # multip = 1
-        # for i in range(len(table[0])-provider_index-1):
-        #     multip *= 2
-        # if table[best_index][provider_index] == 0:
-        #     multip *= -1
-        # best_alternative_index = best_index - multip
-        #return [table[best_alternative_index],table[best_index],table[0],best_skill]
         return [table[best_index],table[0]]
 
     def open_mail(self) -> None:
@@ -223,7 +163,6 @@ class MS_Requester(Requester):
             for skill in self.skill_set:
                 produced_table = self.create_value_table(provider,skill)
                 produced_table = self.add_beliefs(produced_table,provider,skill)
-                #produced_table = self.remove_belief(produced_table,provider)
                 selected_case = self.select_best_values(produced_table,provider)
                 self.compile_offers(selected_case,provider,skill)
                 self.send_offer_msg(provider)
@@ -237,13 +176,6 @@ class MS_Requester(Requester):
             self.send_offer_msg(neighbour)
 
     def compile_offers(self,selected_case : list,provider : int,skill):
-        # case_index = 0
-        # for i in selected_case[2]:
-        #     if i == provider:
-        #         break
-        #     case_index+=1
-        # if selected_case[-1] == -1:
-        #     return
         providers_list = []
         for i in range(0,len(selected_case[0])-1):
             if selected_case[0][i] == 1:
@@ -258,18 +190,9 @@ class MS_Requester(Requester):
         if after_assignment - before_assignment <= 0:
             calculated_offers = (0,skill)
         else:
-            # agents_belief = self.message_data[provider][1].context
-            # if selected_case[-1] in agents_belief:
             calculated_offers = (1*(after_assignment - before_assignment),skill)
-            # else:
-            #     calculated_offers = (0.1*(selected_case[0][-1][selected_case[-1]][0]) ,selected_case[-1])
-
-        # diff = selected_case[1][-1][selected_case[-1]][0] - selected_case[0][-1][selected_case[-1]][0]
-        # if diff > 0 and selected_case[1][case_index] == 1:
-        #     calculated_offers = (0.1*selected_case[1][-1][selected_case[-1]][0] ,selected_case[1][-1][selected_case[-1]][1])
-        # else:
-        #     calculated_offers = (0,selected_case[1][-1][selected_case[-1]][1])
         self.offer[provider] = calculated_offers
+
 
     def calculate_required_utility(self):
         utility = 0
@@ -318,7 +241,6 @@ class MS_Requester(Requester):
                 if nkey not in simulation_times_for_utility[key]:
                     dict_to_append[nkey] = t_a_p[key][nkey]
         simulation_times_for_utility.update(dict_to_append)
-
 
 
         return simulation_times_for_utility

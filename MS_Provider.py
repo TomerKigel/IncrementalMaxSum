@@ -5,7 +5,6 @@ import time
 
 import Agent
 import utils
-from ArrivalNode import ArrivalNode
 from Message import Message, MsgUtilityOffer, MsgBeliefVector, MsgInitFromRequster, MsgProviderChoice
 from Provider import Provider
 
@@ -19,12 +18,9 @@ class MS_Provider(Provider):
         self.Belief = {}
         self.incoming_utility_messages = []
         self.mistake_probability = 0
-        self.possible_arrival_times = []
 
         self.After_fmr = 0
         self.cur_iter_fmr = False
-
-        self.action_count = 0
 
 
     def advance_time_via_choice(self):
@@ -80,9 +76,6 @@ class MS_Provider(Provider):
                 self.incoming_setupmessages.append(massage)
             # add other messages handling here
         self.inmessagebox.clear()
-
-    def initate(self):
-      pass
 
     def compute(self):
         self.open_mail()

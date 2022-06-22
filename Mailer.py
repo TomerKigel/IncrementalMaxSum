@@ -37,7 +37,7 @@ class Mailer():
             self.highest_iter = self.iteration_num
             self.highest_util = utility
         self.iteration_num += 1
-        print(self.iteration_num)
+        #print(self.iteration_num)
 
         return (utility,self.iteration_nclo())
 
