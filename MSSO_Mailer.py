@@ -79,45 +79,27 @@ class MSSO_Mailer(Mailer):
            :return list: a list of neighbours to detach
         '''
         self.req = requester
-        neighbours_sorted = sorted(requester.neighbor_util.items(), key = cmp_to_key(self.heuristic_function))
-        selected_providers = []
-        sum = 0
-        for provider_tuple in neighbours_sorted:
-            requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, self.chosen_skill)
-            be = requester.final_utility()
-            t_p = copy.deepcopy(selected_providers)
-            t_p.append(provider_tuple[0])
-            requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
-            af = requester.final_utility()
-            if self.chosen_skill in requester.max_util:
-                if af - be != 0:
-                    selected_providers.append(provider_tuple[0])
-                #res = self.ms_heuristic_function_helper(sum,requester.skill_unit_value[self.chosen_skill],af-be)
-            # else:
-            #     res = self.ms_heuristic_function_helper(sum, 0, af - be)
-            # if res != False:
-            #     selected_providers.append(provider_tuple[0])
-            #     requester.simulation_times_for_utility = requester.construct_time_line(selected_providers,self.chosen_skill)
-            #     sum = requester.final_utility()
-            # else:
-            #     break
+        neighbours_sorted = sorted(requester.neighbor_util.items(), key=cmp_to_key(self.heuristic_function))
+        for skill in self.req.skill_set:
+            selected_providers = []
+            for i in self.req.allocated_providers:
+                selected_providers.append(i[0])
+            for provider_tuple in neighbours_sorted:
+                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, self.chosen_skill)
+                be = requester.final_utility()
+                t_p = copy.deepcopy(selected_providers)
+                t_p.append(provider_tuple[0])
+                requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
+                af = requester.final_utility()
+                if self.chosen_skill in requester.max_util:
+                    if af - be != 0:
+                        selected_providers.append(provider_tuple[0])
 
-        unneeded_providers = [s for s in requester.connections.keys() if s not in selected_providers]
+            self.req.internal_fmr[skill] = copy.deepcopy(selected_providers)
 
-        for provider in unneeded_providers:
-            self.remove_connection_by_reference(self.Providers[provider],requester)
-
-        for i in self.Providers.keys():
-            if self.Providers[i].id_ in requester.neighbor_data.keys():
-                self.Providers[i].up_fmr()
-
-        requester.original_util = copy.deepcopy(requester.neighbor_util)
 
 
     def heuristic_function(self,provider1 : tuple,provider2 : tuple) -> int:
-
-
-
         for i in self.Providers.keys():
             if self.Providers[i].id_ == provider1[0]:
                 this_agent = self.Providers[i]

@@ -108,86 +108,6 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 
             mailer.initiate()
 
-            # re_max_skills = 0
-            # re_max_util = 0
-            # pr_max_skills = 0
-            # pr_max_util = 0
-            # for k in problem.requesters:
-            #     re_max_skills += sum(k.skill_set.values())#required_utility
-            #     re_max_util += k.required_utility
-            #
-            # providers_max_skills = {}
-            # providers_max_util = {}
-            #
-            # requesters_max_util = {}
-            # for k in copy_problem.requesters:
-            #     for j in k.skill_unit_value.keys():
-            #         if j not in requesters_max_util:
-            #             requesters_max_util[j] = k.skill_unit_value[j]
-            #         else:
-            #             if requesters_max_util[j] < k.skill_unit_value[j]:
-            #                 requesters_max_util[j] = k.skill_unit_value[j]
-            #
-            # for k in copy_problem.requesters:
-            #     for key in k.original_util.keys():
-            #         if key not in providers_max_skills:
-            #             providers_max_skills[key] = sum(k.neighbor_data[key][1].values())
-            #             providers_max_util[key] = 0
-            #             temp = 0
-            #             for ki in k.neighbor_data[key][1].keys():
-            #                 if ki in k.max_util:
-            #                     temp += k.neighbor_data[key][1][ki] * requesters_max_util[j]
-            #             providers_max_util[key] = temp
-            #         elif k.original_util[key] > providers_max_skills[key]:
-            #             providers_max_skills[key] = sum(k.neighbor_data[key][1].values())
-            #             temp = 0
-            #             for ki in k.neighbor_data[key][1].keys():
-            #                 if ki in k.max_util:
-            #                     temp += k.neighbor_data[key][1][ki] * requesters_max_util[j]
-            #             providers_max_util[key] = temp
-            # for j in providers_max_skills.keys():
-            #     pr_max_skills += providers_max_skills[j]
-            # for j in providers_max_util.keys():
-            #     pr_max_util += providers_max_util[j]
-            #
-            # final_res = {}
-            # for k in copy_problem.requesters:
-            #     final_res[k] = {}
-            #     for i in k.neighbor_data.keys():
-            #         res = {}
-            #         for j in k.neighbor_data[i][1]:
-            #             if j in res:
-            #                 if j not in k.skill_unit_value:
-            #                     continue
-            #                 if res[j] < k.neighbor_data[i][1][j] * k.skill_unit_value[j]:
-            #                     res[j] = k.neighbor_data[i][1][j] * k.skill_unit_value[j]
-            #             else:
-            #                 if j in k.skill_unit_value:
-            #                     res[j] = k.neighbor_data[i][1][j] * k.skill_unit_value[j]
-            #                 else:
-            #                     res[j] = 0
-            #         final_res[k][i] = res
-            #
-            # providers = {}
-            # s = 0
-            # for provider in k.neighbor_data.keys():
-            #     providers[provider] = {}
-            #     for y in k.neighbor_data[provider][1]:
-            #         providers[provider][y] = 0
-            #     for i in final_res:
-            #         for j in final_res[i]:
-            #             if j == provider:
-            #                 for key in final_res[i][j]:
-            #                     if final_res[i][j][key] > providers[provider][key]:
-            #                         providers[provider][key] = final_res[i][j][key]
-            # s = 0
-            # for p in providers.values():
-            #     for i in p.values():
-            #         s += i
-            #
-            # print(s)
-
-
             res = []
             for p in range(0,mailer_iteration_termination):
                     #draw_problem_graph(win, copy_problem)
@@ -226,7 +146,7 @@ if __name__ == "__main__":
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 1
+    number_of_problems = 30
     number_of_providers = 10
     number_of_requesters = 15
     location_min_x = 1

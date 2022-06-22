@@ -18,7 +18,7 @@ class MS_Requester(Requester):
         self.mistake_probability = 0.1
         self.internal_fmr = {}
         for skill in self.skill_set:
-            self.internal_fmr[skill] = []
+            self.internal_fmr[skill] = [i for i in self.connections]
 
 
     def full_reset(self):
@@ -35,20 +35,21 @@ class MS_Requester(Requester):
             for elem in self.neighbor_data[id][3]:
                 self.offer[id] = (0,0)
 
-    def assemble_neighbour_assignments(self):
+    def assemble_neighbour_assignments(self,skill,provider):
         output = {}
         for neighbour in self.connections.keys():
-            output[neighbour] = []
-            for key in self.neighbor_data[neighbour][3]:
-                output[neighbour].append(key)
+            if neighbour in self.internal_fmr[skill] and provider != neighbour:
+                output[neighbour] = []
+                for key in self.neighbor_data[neighbour][3]:
+                    output[neighbour].append(key)
         return output
 
 
-    def create_value_table(self,provider) -> list:
-        assignments = self.assemble_neighbour_assignments()
+    def create_value_table(self,provider,skill) -> list:
+        assignments = self.assemble_neighbour_assignments(skill,provider)
         table = []
         keylist = list(assignments.keys())
-        keylist.remove(provider)
+        #keylist.remove(provider)
         table.append(keylist)
         amount_of_lines = 1
         for neighbour in keylist:
@@ -56,11 +57,11 @@ class MS_Requester(Requester):
         permutation = utils.truth_table(keylist, amount_of_lines)
         for line in range (0,amount_of_lines):
             table.append(permutation[line])
-            table[line+1].append(self.case_utility(table,line+1,"marginal utility"))
+            table[line+1].append(self.case_utility(table,line+1,"marginal utility",skill))
 
         return table
 
-    def case_utility(self,table : list[int],line : int,policy : string) -> int:
+    def case_utility(self,table : list[int],line : int,policy : string,skill) -> int:
         util = 0
         if policy == "marginal utility":
             pass
@@ -72,14 +73,12 @@ class MS_Requester(Requester):
             if key == 1:
                 providers_list.append(table[0][index])
             index += 1
-        res = {}
-        for skill in self.skill_set:
-            self.simulation_times_for_utility = self.construct_time_line(providers_list,skill)
-            t_a_p = self.construct_skill_times(self.allocated_providers,True)
-            self.simulation_times_for_utility = self.conjoin_simulation_times(t_a_p,self.simulation_times_for_utility)
-            util = self.final_utility()
-            res[skill] = [util,skill]
-        return res
+
+        self.simulation_times_for_utility = self.construct_time_line(providers_list,skill)
+        t_a_p = self.construct_skill_times(self.allocated_providers,True)
+        self.simulation_times_for_utility = self.conjoin_simulation_times(t_a_p,self.simulation_times_for_utility)
+        util = self.final_utility()
+        return util
 
     def ovp(self):
         curerent_util = 0
@@ -108,7 +107,7 @@ class MS_Requester(Requester):
             index +=1
         return self.construct_skill_times(list_of_arrivals,False)
 
-    def add_beliefs(self,table : list,provider):
+    def add_beliefs(self,table : list,provider,skill):
         agents_beliefs = {}
         for key in self.connections.keys():
             if key != provider:
@@ -127,12 +126,10 @@ class MS_Requester(Requester):
         for i in range(1,len(table)):
             for elem in range(0,len(table[i])-1):
                 if table[i][elem] == 1 and agents_beliefs[table[0][elem]]:
-                    for skill_num in self.skill_set:
-                        if skill_num in agents_beliefs[table[0][elem]][self.id_]:
-                            table[i][-1][skill_num][0] += agents_beliefs[table[0][elem]][self.id_][skill_num]
+                    if skill in agents_beliefs[table[0][elem]][self.id_]:
+                        table[i][-1] += agents_beliefs[table[0][elem]][self.id_][skill]
                 else:
-                    for skill_num in self.skill_set:
-                            table[i][-1][skill_num][0] += max_belief[table[0][elem]]
+                    table[i][-1] += max_belief[table[0][elem]]
         return table
 
     def remove_belief(self,table : list,provider):
@@ -182,11 +179,9 @@ class MS_Requester(Requester):
                 index += 1
                 continue
             else:
-                for item in line[-1].values():
-                    if item[0] >= max_util:
-                        best_index = index
-                        best_skill = item[1]
-                        max_util = item[0]
+                if line[-1] >= max_util:
+                    best_index = index
+                    max_util = line[-1]
             index += 1
 
         # multip = 1
@@ -196,7 +191,7 @@ class MS_Requester(Requester):
         #     multip *= -1
         # best_alternative_index = best_index - multip
         #return [table[best_alternative_index],table[best_index],table[0],best_skill]
-        return [table[best_index],table[0],best_skill]
+        return [table[best_index],table[0]]
 
     def open_mail(self) -> None:
         index = 0
@@ -225,12 +220,13 @@ class MS_Requester(Requester):
         self.open_mail()
         self.nclo = len(self.connections) * len(self.connections)
         for provider in self.connections.keys():
-            produced_table = self.create_value_table(provider)
-            produced_table = self.add_beliefs(produced_table,provider)
-            #produced_table = self.remove_belief(produced_table,provider)
-            selected_case = self.select_best_values(produced_table,provider)
-            self.compile_offers(selected_case,provider)
-            self.send_offer_msg(provider)
+            for skill in self.skill_set:
+                produced_table = self.create_value_table(provider,skill)
+                produced_table = self.add_beliefs(produced_table,provider,skill)
+                #produced_table = self.remove_belief(produced_table,provider)
+                selected_case = self.select_best_values(produced_table,provider)
+                self.compile_offers(selected_case,provider,skill)
+                self.send_offer_msg(provider)
 
     def send_offer_msg(self, neighbour: int) -> None:
         new_message = MsgUtilityOffer(self.id_, neighbour, self.offer[neighbour])
@@ -240,31 +236,31 @@ class MS_Requester(Requester):
         for neighbour in self.neighbor_data.keys():
             self.send_offer_msg(neighbour)
 
-    def compile_offers(self,selected_case : list,provider : int):
+    def compile_offers(self,selected_case : list,provider : int,skill):
         # case_index = 0
         # for i in selected_case[2]:
         #     if i == provider:
         #         break
         #     case_index+=1
-        if selected_case[-1] == -1:
-            return
+        # if selected_case[-1] == -1:
+        #     return
         providers_list = []
         for i in range(0,len(selected_case[0])-1):
             if selected_case[0][i] == 1:
                 providers_list.append(selected_case[1][i])
-        self.simulation_times_for_utility = self.construct_time_line(providers_list, selected_case[-1])
+        self.simulation_times_for_utility = self.construct_time_line(providers_list, skill)
         before_assignment = self.final_utility()
 
         providers_list.append(provider)
-        self.simulation_times_for_utility = self.construct_time_line(providers_list, selected_case[-1])
+        self.simulation_times_for_utility = self.construct_time_line(providers_list, skill)
         after_assignment  = self.final_utility()
 
         if after_assignment - before_assignment <= 0:
-            calculated_offers = (0,selected_case[-1])
+            calculated_offers = (0,skill)
         else:
             # agents_belief = self.message_data[provider][1].context
             # if selected_case[-1] in agents_belief:
-            calculated_offers = (1*(after_assignment - before_assignment),selected_case[-1] )
+            calculated_offers = (1*(after_assignment - before_assignment),skill)
             # else:
             #     calculated_offers = (0.1*(selected_case[0][-1][selected_case[-1]][0]) ,selected_case[-1])
 
