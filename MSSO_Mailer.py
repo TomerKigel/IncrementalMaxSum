@@ -90,15 +90,17 @@ class MSSO_Mailer(Mailer):
             requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
             af = requester.final_utility()
             if self.chosen_skill in requester.max_util:
-                res = self.ms_heuristic_function_helper(sum,requester.skill_unit_value[self.chosen_skill],af-be)
-            else:
-                res = self.ms_heuristic_function_helper(sum, 0, af - be)
-            if res != False:
-                selected_providers.append(provider_tuple[0])
-                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers,self.chosen_skill)
-                sum = requester.final_utility()
-            else:
-                break
+                if af - be != 0:
+                    selected_providers.append(provider_tuple[0])
+                #res = self.ms_heuristic_function_helper(sum,requester.skill_unit_value[self.chosen_skill],af-be)
+            # else:
+            #     res = self.ms_heuristic_function_helper(sum, 0, af - be)
+            # if res != False:
+            #     selected_providers.append(provider_tuple[0])
+            #     requester.simulation_times_for_utility = requester.construct_time_line(selected_providers,self.chosen_skill)
+            #     sum = requester.final_utility()
+            # else:
+            #     break
 
         unneeded_providers = [s for s in requester.connections.keys() if s not in selected_providers]
 

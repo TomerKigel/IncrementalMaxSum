@@ -16,6 +16,9 @@ class MS_Requester(Requester):
         self.util_message_data = {}
         self.relationship_health = {}
         self.mistake_probability = 0.1
+        self.internal_fmr = {}
+        for skill in self.skill_set:
+            self.internal_fmr[skill] = []
 
 
     def full_reset(self):
@@ -261,7 +264,7 @@ class MS_Requester(Requester):
         else:
             # agents_belief = self.message_data[provider][1].context
             # if selected_case[-1] in agents_belief:
-            calculated_offers = (1*(selected_case[0][-1][selected_case[-1]][0]),selected_case[-1] )
+            calculated_offers = (1*(after_assignment - before_assignment),selected_case[-1] )
             # else:
             #     calculated_offers = (0.1*(selected_case[0][-1][selected_case[-1]][0]) ,selected_case[-1])
 
