@@ -1,3 +1,9 @@
+'''
+Author: Tomer kigel (constructed and adjusted based on the work of Mrs. Maya Lavie)
+Contact info: e-mail: tomer.kigel@gmail.com
+              phone number: 0507650153
+              github: https://github.com/TomerKigel
+'''
 import copy
 import math
 

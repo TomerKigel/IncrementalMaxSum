@@ -1,3 +1,9 @@
+'''
+Author: Tomer kigel
+Contact info: e-mail: tomer.kigel@gmail.com
+              phone number: 0507650153
+              github: https://github.com/TomerKigel
+'''
 import copy
 import random
 from functools import cmp_to_key
@@ -56,7 +62,6 @@ class MSSO_Mailer(Mailer):
         for requester in self.Requesters.values():
             requester.open_mail()
             requester.init_relationships()
-            requester.ovp()
             requester.reset_offers()
 
 
@@ -73,13 +78,13 @@ class MSSO_Mailer(Mailer):
             for i in self.req.allocated_providers:
                 selected_providers.append(i[0])
             for provider_tuple in neighbours_sorted:
-                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, self.chosen_skill)
+                requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, skill)
                 be = requester.final_utility()
                 t_p = copy.deepcopy(selected_providers)
                 t_p.append(provider_tuple[0])
-                requester.simulation_times_for_utility = requester.construct_time_line(t_p, self.chosen_skill)
+                requester.simulation_times_for_utility = requester.construct_time_line(t_p, skill)
                 af = requester.final_utility()
-                if self.chosen_skill in requester.max_util:
+                if skill in requester.max_util:
                     if af - be != 0:
                         selected_providers.append(provider_tuple[0])
 

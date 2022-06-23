@@ -1,3 +1,9 @@
+'''
+Author: Tomer kigel (constructed and adjusted based on the work of Mrs. Maya Lavie)
+Contact info: e-mail: tomer.kigel@gmail.com
+              phone number: 0507650153
+              github: https://github.com/TomerKigel
+'''
 import copy
 import math
 from random import random
@@ -59,7 +65,17 @@ class Requester(Agent):
 
     def final_utility_orig(self):
         self.simulation_times_for_utility = self.construct_skill_times(self.allocated_providers,False)
-        return self.final_utility()
+        all_util = self.final_utility()
+
+        x = int((all_util / self.required_utility) * 254)
+        if x > 255:
+            x = 255
+        if x < 0:
+            x = 0
+        cl = color_rgb(255 - x, 255, 255 - x)
+        self.graphic.setFill(cl)
+
+        return all_util
 
 
     def send_init_msg(self, agent_id):
@@ -160,14 +176,6 @@ class Requester(Agent):
 
         if all_util < 0:
             return 0
-
-        x = int((all_util/self.required_utility) * 254)
-        if x > 255:
-            x = 255
-        if x < 0:
-            x = 0
-        cl = color_rgb(255-x,255,255-x)
-        self.graphic.setFill(cl)
 
         return round(all_util, 2)
 

@@ -1,3 +1,9 @@
+'''
+Author: Tomer kigel
+Contact info: e-mail: tomer.kigel@gmail.com
+              phone number: 0507650153
+              github: https://github.com/TomerKigel
+'''
 import copy
 import random
 import string
@@ -158,12 +164,21 @@ class MS_Requester(Requester):
 
     def compute(self):
         self.open_mail()
-        self.nclo = len(self.connections) * len(self.connections)
+        max_skill = 0
+        max_val = 0
+        for i in self.internal_fmr.keys():
+            if len(self.internal_fmr[i]) >= max_val:
+                max_skill = i
+                max_val = len(self.internal_fmr[i])
+        if not self.internal_fmr:
+            self.nclo = 0
+        else:
+            self.nclo = len(self.internal_fmr[max_skill]) * len(self.internal_fmr[max_skill])
         for provider in self.connections.keys():
             for skill in self.skill_set:
                 produced_table = self.create_value_table(provider,skill)
                 produced_table = self.add_beliefs(produced_table,provider,skill)
-                selected_case = self.select_best_values(produced_table,provider)
+                selected_case = self.select_best_values(produced_table)
                 self.compile_offers(selected_case,provider,skill)
                 self.send_offer_msg(provider)
 

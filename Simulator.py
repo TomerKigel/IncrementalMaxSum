@@ -1,3 +1,9 @@
+'''
+Author: Tomer kigel (constructed and adjusted based on the work of Mrs. Maya Lavie)
+Contact info: e-mail: tomer.kigel@gmail.com
+              phone number: 0507650153
+              github: https://github.com/TomerKigel
+'''
 import copy
 
 import pandas
@@ -87,35 +93,30 @@ def draw_problem_graph(win : GraphWin, problem : Problem):
 # creates mailer and solves problems
 
 def solve_problems(win,problems_input, mailer_iteration_termination):
-    all_porbs = []
     utilities_per_problem = []
     i = 0
     for problem in tqdm(problems_input):
             copy_problem = copy.deepcopy(problem)
             mailer = MSSO_Mailer(copy_problem,mailer_iteration_termination,euclidian_distance_threshold)
-            mailer.give_max_skill_set(problem.num_skill_types)
             set_colors(copy_problem)
 
             mailer.initiate()
 
             res = []
             for p in tqdm(range(0,mailer_iteration_termination)):
-                    #draw_problem_graph(win, copy_problem)
+                    # draw_problem_graph(win, copy_problem)
                     iter_res = mailer.iterate()
                     if res != []:
                         res.append((iter_res[0],iter_res[1] + res[-1][1]))
                     else:
                         res.append(iter_res)
-                    #win.update()
-                    # time.sleep(0.5)
-                    # win.clear()
+                    # win.update()
+                    # time.sleep(1.5)
             utilities_per_problem.append(res)
             mx = max(utilities_per_problem[i])
             print(mx)
-            all_porbs.append((utilities_per_problem))
             i+=1
-
-    return all_porbs
+    return utilities_per_problem
 
 
 if __name__ == "__main__":
@@ -125,9 +126,9 @@ if __name__ == "__main__":
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 30
-    number_of_providers = 10
-    number_of_requesters = 15
+    number_of_problems = 3
+    number_of_providers = 5
+    number_of_requesters = 4
     location_min_x = 1
     location_max_x = 50
     location_min_y = 1
@@ -172,19 +173,21 @@ if __name__ == "__main__":
     avg = []
 
     nclo_stamps = []
-    for problem in utilities_per_problem:
-        for utils in problem:
-            for i in utils:
-                if i[1] not in nclo_stamps:
-                    nclo_stamps.append(i[1])
+    for utils in tqdm(utilities_per_problem):
+        for i in utils:
+            if i[1] not in nclo_stamps:
+                nclo_stamps.append(i[1])
     nclo_stamps = sorted(nclo_stamps)
 
-    for problem in utilities_per_problem:
-        for utils in problem:
+    for utils in tqdm(utilities_per_problem):
             index_in_nclso = 0
             for i in nclo_stamps:
-                x = [item for item in utils if item[1] == i]
-                if x == []:
+                x = -1
+                for item in utils:
+                    if item[1] == i:
+                        x = 1
+                        break
+                if x == 1:
                     utils.append((utils[index_in_nclso][0],i))
                     index_in_nclso += 1
             utils.sort(key=lambda y: y[1])
@@ -194,9 +197,9 @@ if __name__ == "__main__":
     for i in range(0,len(nclo_stamps)):
         avg.append(0)
 
-    for problem_utils in utilities_per_problem:
+    for problem_utils in tqdm(utilities_per_problem):
         index = 0
-        for i in problem_utils[0]:
+        for i in problem_utils:
             if index >= len(nclo_stamps):
                 break
             avg[index] += i[0]
@@ -208,7 +211,7 @@ if __name__ == "__main__":
     plot_xy_graph(avg,nclo_stamps)
     any_time = []
     max = 0
-    for util in avg:
+    for util in tqdm(avg):
         if util > max:
             max = util
         any_time.append(max)

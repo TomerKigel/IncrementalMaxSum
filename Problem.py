@@ -1,3 +1,7 @@
+'''
+Author: Maya Lavie
+'''
+
 import math
 import random
 
