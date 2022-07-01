@@ -38,6 +38,12 @@ class MS_Requester(Requester):
                 self.offer[id] = (0,0)
 
     def assemble_neighbour_assignments(self,skill,provider) -> dict:
+        '''
+        given a skill map out the relevant providers that can be assigned to the requester after fmr for the given skill
+        :param skill: The skill associated with the table we would like to build later on
+        :param provider: the provider for whom we would like to build the table for later on
+        :return: list of providers
+        '''
         output = {}
         for neighbour in self.connections.keys():
             if neighbour in self.internal_fmr[skill] and provider != neighbour:
@@ -48,6 +54,12 @@ class MS_Requester(Requester):
 
 
     def create_value_table(self,provider : int,skill : int) -> list:
+        '''
+        Build a table with all possible assignments
+        :param provider: a list of providers that define the domain
+        :param skill: the skill associated with the table
+        :return: the resulted table
+        '''
         assignments = self.assemble_neighbour_assignments(skill,provider)
         table = []
         keylist = list(assignments.keys())
@@ -63,6 +75,13 @@ class MS_Requester(Requester):
         return table
 
     def case_utility(self,table : list[int],line : int,skill : int) -> int:
+        '''
+        given an assignment calculates the utility
+        :param table: table of assignments
+        :param line: line number we are calculating for
+        :param skill: the skill that the table is associated with
+        :return: the calculated utility
+        '''
         index = 0
         providers_list = []
         for key in table[line]:
@@ -77,6 +96,12 @@ class MS_Requester(Requester):
         return util
 
     def construct_time_line(self, providers_list : list ,skill : int) -> dict:
+        '''
+        given simple location and speed data, construct a timeline
+        :param providers_list: list of providers for whom we construct the arrival times and eventually the timeline
+        :param skill: skill for which we make the timeline
+        :return: dict of dicts {skill: time: amount of agents }
+        '''
         list_of_arrivals = []
         index = 0
         for provider in providers_list:
@@ -93,6 +118,14 @@ class MS_Requester(Requester):
         return self.construct_skill_times(list_of_arrivals,False)
 
     def add_beliefs(self,table : list,provider : int,skill : int) -> list:
+        '''
+        Add the belief to each assignment, if 1 add original belief
+        if 0 add the highest belief that is not associated with the requester we are calculating for
+        :param table: table of assignments and utilities
+        :param provider: the provider id for whom we calculate for
+        :param skill: the skill associated with the table parameter
+        :return: table after adding all beliefs
+        '''
         agents_beliefs = {}
         for key in self.connections.keys():
             if key != provider:
@@ -118,6 +151,11 @@ class MS_Requester(Requester):
         return table
 
     def select_best_values(self,table : list) -> list:
+        '''
+        Pick the line in the table with the highest utility value
+        :param table: table of assignments with calculated utility
+        :return: a list/tuple with the highest utility line found and the providers list associated with the assignment
+        '''
         max_util = 0
         best_index = 0
         index = 0
@@ -134,6 +172,11 @@ class MS_Requester(Requester):
         return [table[best_index],table[0]]
 
     def open_mail(self) -> None:
+        '''
+        Open mail and clear unwanted data
+        '''
+
+        # remove non required assignment from previous iteration
         index = 0
         idnex_to_del = []
         for i in self.allocated_providers:
@@ -143,6 +186,8 @@ class MS_Requester(Requester):
         for i in idnex_to_del:
             self.allocated_providers.remove(i)
 
+
+        #open mail
         for message in self.inmessagebox:
             if isinstance(message, MsgProviderChoice):
                 if (message.sender_id,message.context,message.final) not in self.allocated_providers:
@@ -155,6 +200,9 @@ class MS_Requester(Requester):
                 self.message_data[message.sender_id][1] = message
 
         self.inmessagebox.clear()
+
+        # initialize all possible assignments for table creation once (when internal_fmr is still empty)
+        # will be later reduced by FMR
         if self.internal_fmr == {}:
             for skill in self.skill_set:
                 self.internal_fmr[skill] = [i for i in self.connections]
@@ -169,6 +217,11 @@ class MS_Requester(Requester):
         self.nclo = set_val
 
     def compute(self) -> None:
+        '''
+        open and treat all messages and then for each provider make all relevant calculations
+        and send a response back to providers
+        :return:
+        '''
         self.open_mail()
         for provider in self.connections.keys():
             best_cases = {}
@@ -179,12 +232,17 @@ class MS_Requester(Requester):
                     produced_table = self.add_beliefs(produced_table,provider,skill)
                     selected_case = self.select_best_values(produced_table)
                     best_cases[skill] = selected_case
+
+
+            #select the best line out of N best lines from each skill table
             max_u = 0
             max_skill = 0
             for i in best_cases:
                 if best_cases[i][0][-1] >= max_u:
                     max_u = best_cases[i][0][-1]
                     max_skill = i
+
+
             self.compile_offers(best_cases[max_skill],provider,max_skill)
         self.generate_result_messages()
 
@@ -198,6 +256,12 @@ class MS_Requester(Requester):
             self.send_offer_msg(neighbour)
 
     def compile_offers(self,selected_case : list,provider : int,skill) -> None:
+        '''
+        make an offer for a selected provider
+        :param selected_case: The highest utility selected from table
+        :param provider: The provider for which the calculation is made for
+        :param skill: The selected skill related to the table we chose the selected line from
+        '''
         providers_list = []
         for i in range(0,len(selected_case[0])-1):
             if selected_case[0][i] == 1:
