@@ -29,7 +29,10 @@ class MS_Provider(Provider):
         self.cur_iter_fmr = False
 
 
-    def advance_time_via_choice(self):
+    def advance_time_via_choice(self) -> None:
+        '''
+        after incrementing, move the agent to his new position (typically on to a requester position)
+        '''
         if self.chosen_requester != 0 and self.chosen_requester != None:
             self.graphic.move(self.total_connections[self.chosen_requester[0]][0] - self.current_location[0] , self.total_connections[self.chosen_requester[0]][1] - self.current_location[1])
             self.id_text.move(self.total_connections[self.chosen_requester[0]][0] - self.current_location[0] , self.total_connections[self.chosen_requester[0]][1] - self.current_location[1])
@@ -52,12 +55,19 @@ class MS_Provider(Provider):
     def reconstruct_choice(self,choice):
         self.chosen_requester = choice
 
-    def up_fmr(self):
+    def up_fmr(self) -> None:
+        '''
+        metric for FMR
+        '''
         if not self.cur_iter_fmr:
             self.After_fmr += 1
             self.cur_iter_fmr = True
 
-    def full_reset(self):
+    def full_reset(self) -> None:
+        '''
+        reset belief vector and other values when incrementing
+        :return:
+        '''
         super().full_reset()
         self.Belief = {}
         self.incoming_utility_messages = []
@@ -74,7 +84,11 @@ class MS_Provider(Provider):
         for key in keys_to_del:
             del self.Belief[key]
 
-    def open_mail(self):
+    def open_mail(self) -> None:
+        '''
+        sort through incoming messages
+        :return:
+        '''
         for massage in self.inmessagebox:
             if isinstance(massage,MsgUtilityOffer):
                 self.incoming_utility_messages.append(massage)
@@ -83,7 +97,11 @@ class MS_Provider(Provider):
             # add other messages handling here
         self.inmessagebox.clear()
 
-    def compute(self):
+    def compute(self) -> None:
+        '''
+        open and treat all messages and then make all relevant calculations
+        and send a query back to requesters
+        '''
         self.open_mail()
         self.update_belief()
         self.normalize_belief_vector()
@@ -94,7 +112,7 @@ class MS_Provider(Provider):
         msg = MsgBeliefVector(self.id_,requester_id,self.Belief)
         self.outmessagebox.append(msg)
 
-    def generate_result_messages(self):
+    def generate_result_messages(self) -> None:
         for neighbour in self.neighbor_data.keys():
             self.send_belief_msg(neighbour)
 
@@ -105,7 +123,10 @@ class MS_Provider(Provider):
                 self.Belief[key][skill] = 0
 
 
-    def update_belief(self):
+    def update_belief(self) -> None:
+        '''
+        update belief vector via messages received from requesters
+        '''
         # damping
         for key in self.Belief.keys():
             for nkey in self.Belief[key]:
@@ -122,7 +143,10 @@ class MS_Provider(Provider):
         self.incoming_utility_messages.clear()
 
 
-    def normalize_belief_vector(self):
+    def normalize_belief_vector(self) -> None:
+        '''
+        Normalize belief vector by subtracting the lowest value in the vector from all cells in the vector
+        '''
         if not self.Belief:
             return
         min_value = 100000
@@ -135,7 +159,11 @@ class MS_Provider(Provider):
                 if self.Belief[key][nkey] >= min_value:
                     self.Belief[key][nkey] -= min_value
 
-    def make_a_choice(self):
+
+    def make_a_choice(self) -> None:
+        '''
+        traverse the belief vector and make a choice based on the highest value found
+        '''
         self.chosen_requester = 0
         if self.Belief and self.connections and self.skill_set:
             best_choice = None
