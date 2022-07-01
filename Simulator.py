@@ -124,6 +124,50 @@ def solve_problems(win,problems_input, mailer_iteration_termination) -> None:
     return utilities_per_problem
 
 
+def avarage_utils(utilities_per_problem,nclo_stamps):
+    avg = {}
+
+    for utils in tqdm(utilities_per_problem):
+        original_len = len(utils)
+        index_in_nclso = 0
+        for i in nclo_stamps:
+            x = -1
+            for item in utils:
+                if item[1] == i:
+                    x = 1
+                    break
+            if x != 1:
+                if (utils[index_in_nclso][0], i) not in utils:
+                    if index_in_nclso >= original_len - 1:
+                        utils.append((utils[original_len - 1][0], i))
+                    else:
+                        utils.append((utils[index_in_nclso][0], i))
+            else:
+                index_in_nclso += 1
+        utils.sort(key=lambda y: y[1])
+
+    for i in range(0, len(nclo_stamps)):
+        avg[nclo_stamps[i]] = 0
+
+    for problem_utils in tqdm(utilities_per_problem):
+        index = 0
+        for i in problem_utils:
+            avg[i[1]] += i[0]
+            index += 1
+    for i in nclo_stamps:
+        avg[i] = avg[i] / len(utilities_per_problem)
+
+    return avg
+
+def create_nclo_stamps(utilities_per_problem):
+    nclo_stamps = []
+    for utils in tqdm(utilities_per_problem):
+        for i in utils:
+            if i[1] not in nclo_stamps:
+                nclo_stamps.append(i[1])
+    nclo_stamps = sorted(nclo_stamps)
+    return nclo_stamps
+
 if __name__ == "__main__":
     # algorithm variables
     algorithm = 0  # 0=maxsum
@@ -174,45 +218,9 @@ if __name__ == "__main__":
     win.setCoords(-5, -5, 55, 55)  # set the coordinates of the window; bottom left is (-5, -5) and top right is (55, 55)
     utilities_per_problem = solve_problems(win,problems_input=problems, mailer_iteration_termination=mailer_iteration_termination)
     win.close()
+    nclo_stamps = create_nclo_stamps(utilities_per_problem)
+    avg = avarage_utils(utilities_per_problem,nclo_stamps)
 
-    avg = {}
-
-    nclo_stamps = []
-    for utils in tqdm(utilities_per_problem):
-        for i in utils:
-            if i[1] not in nclo_stamps:
-                nclo_stamps.append(i[1])
-    nclo_stamps = sorted(nclo_stamps)
-
-    for utils in tqdm(utilities_per_problem):
-        original_len = len(utils)
-        index_in_nclso = 0
-        for i in nclo_stamps:
-            x = -1
-            for item in utils:
-                if item[1] == i:
-                    x = 1
-                    break
-            if x != 1:
-                if (utils[index_in_nclso][0], i) not in utils:
-                    if index_in_nclso >= original_len-1:
-                        utils.append((utils[original_len-1][0], i))
-                    else:
-                        utils.append((utils[index_in_nclso][0], i))
-            else:
-                index_in_nclso += 1
-        utils.sort(key=lambda y: y[1])
-
-    for i in range(0, len(nclo_stamps)):
-        avg[nclo_stamps[i]] = 0
-
-    for problem_utils in tqdm(utilities_per_problem):
-        index = 0
-        for i in problem_utils:
-            avg[i[1]] += i[0]
-            index += 1
-    for i in nclo_stamps:
-        avg[i] = avg[i] / len(utilities_per_problem)
 
     plot_xy_graph(list(avg.values()), nclo_stamps)
     any_time = []
