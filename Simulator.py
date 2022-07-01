@@ -107,7 +107,8 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
                     # draw_problem_graph(win, copy_problem)
                     iter_res = mailer.iterate()
                     if res != []:
-                        res.append((iter_res[0],iter_res[1] + res[-1][1]))
+                        if iter_res[1] != res[-1][1]:
+                            res.append((iter_res[0],iter_res[1]))
                     else:
                         res.append(iter_res)
                     # win.update()
@@ -122,13 +123,13 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 if __name__ == "__main__":
     # algorithm variables
     algorithm = 0  # 0=maxsum
-    mailer_iteration_termination = 1000
+    mailer_iteration_termination = 200
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 3
-    number_of_providers = 5
-    number_of_requesters = 4
+    number_of_problems = 1
+    number_of_providers = 10
+    number_of_requesters = 15
     location_min_x = 1
     location_max_x = 50
     location_min_y = 1
@@ -170,7 +171,7 @@ if __name__ == "__main__":
     utilities_per_problem = solve_problems(win,problems_input=problems, mailer_iteration_termination=mailer_iteration_termination)
     win.close()
 
-    avg = []
+    avg = {}
 
     nclo_stamps = []
     for utils in tqdm(utilities_per_problem):
@@ -180,42 +181,43 @@ if __name__ == "__main__":
     nclo_stamps = sorted(nclo_stamps)
 
     for utils in tqdm(utilities_per_problem):
-            index_in_nclso = 0
-            for i in nclo_stamps:
-                x = -1
-                for item in utils:
-                    if item[1] == i:
-                        x = 1
-                        break
-                if x == 1:
-                    utils.append((utils[index_in_nclso][0],i))
-                    index_in_nclso += 1
-            utils.sort(key=lambda y: y[1])
+        original_len = len(utils)
+        index_in_nclso = 0
+        for i in nclo_stamps:
+            x = -1
+            for item in utils:
+                if item[1] == i:
+                    x = 1
+                    break
+            if x != 1:
+                if (utils[index_in_nclso][0], i) not in utils:
+                    if index_in_nclso >= original_len-1:
+                        utils.append((utils[original_len-1][0], i))
+                    else:
+                        utils.append((utils[index_in_nclso][0], i))
+            else:
+                index_in_nclso += 1
+        utils.sort(key=lambda y: y[1])
 
-
-
-    for i in range(0,len(nclo_stamps)):
-        avg.append(0)
+    for i in range(0, len(nclo_stamps)):
+        avg[nclo_stamps[i]] = 0
 
     for problem_utils in tqdm(utilities_per_problem):
         index = 0
         for i in problem_utils:
-            if index >= len(nclo_stamps):
-                break
-            avg[index] += i[0]
+            avg[i[1]] += i[0]
             index += 1
-    for i in range(0,len(avg)):
-        avg[i] = avg[i]/len(utilities_per_problem[0])
+    for i in nclo_stamps:
+        avg[i] = avg[i] / len(utilities_per_problem)
 
-
-    plot_xy_graph(avg,nclo_stamps)
+    plot_xy_graph(list(avg.values()), nclo_stamps)
     any_time = []
     max = 0
     for util in tqdm(avg):
         if util > max:
-            max = util
+            max = avg[util]
         any_time.append(max)
     plot_xy_graph(any_time, nclo_stamps)
 
-    pandas.DataFrame((any_time,nclo_stamps)).to_csv('anytime.csv')
-    pandas.DataFrame((avg,nclo_stamps)).to_csv('data.csv')
+    pandas.DataFrame((any_time, nclo_stamps)).to_csv('anytime.csv')
+    pandas.DataFrame((list(avg.values()), nclo_stamps)).to_csv('data.csv')

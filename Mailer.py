@@ -55,8 +55,6 @@ class Mailer():
             self.highest_iter = self.iteration_num
             self.highest_util = utility
         self.iteration_num += 1
-        #print(self.iteration_num)
-
         return (utility,self.iteration_nclo())
 
 
@@ -66,9 +64,10 @@ class Mailer():
         '''
         max_requester_nclo = 0
         for requester in self.Requesters.values():
-            if requester.nclo > max_requester_nclo:
+            if requester.nclo >= max_requester_nclo:
                 max_requester_nclo = requester.nclo
-                requester.nclo = 0
+        for requester in self.Requesters.values():
+            requester.set_nclo(max_requester_nclo)
 
         return max_requester_nclo
 
@@ -96,7 +95,6 @@ class Mailer():
             for message in requester.outmessagebox:
                 self.Providers[message.receiver_id].inmessagebox.append(message)
             requester.outmessagebox.clear()
-
 
 
 

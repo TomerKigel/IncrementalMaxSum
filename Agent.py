@@ -31,8 +31,6 @@ class Agent():
         # sorted incoming mail
         self.message_data = {}
 
-        self.nclo = 0
-
     def __str__(self):
         return "ID: " + str(self.id_)
 
@@ -71,11 +69,7 @@ class Agent():
     def remove_neighbour(self,agent) -> None:
         if type(agent) == int:
             if agent in self.connections.keys():
-                #del self.neighbor_data[agent]
-                #del self.neighbor_util[agent]
                 del self.connections[agent]
         else:
             if agent.id_ in self.connections.keys():
-                #del self.neighbor_data[agent.id_]
-                #del self.neighbor_util[agent.id_]
                 del self.connections[agent.id_]

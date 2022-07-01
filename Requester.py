@@ -35,8 +35,6 @@ class Requester(Agent):
         for skill in self.skill_set:
             skills_sum += skill
 
-        self.offer_already_compiled = False
-
         self.max_util = max_util
 
         self.skill_unit_value = {}
@@ -58,15 +56,12 @@ class Requester(Agent):
     def __str__(self):
         return "Requester " + Agent.__str__(self)
 
-    def reset(self):
-        self.reset_termination()
-        self.reset_util_j()
-
-
-    def final_utility_orig(self):
+    def final_utility_orig(self) -> float:
         self.simulation_times_for_utility = self.construct_skill_times(self.allocated_providers,False)
         all_util = self.final_utility()
 
+        ####
+        # graphic display of utility color
         x = int((all_util / self.required_utility) * 254)
         if x > 255:
             x = 255
@@ -74,16 +69,20 @@ class Requester(Agent):
             x = 0
         cl = color_rgb(255 - x, 255, 255 - x)
         self.graphic.setFill(cl)
+        ####
 
         return all_util
 
 
-    def send_init_msg(self, agent_id):
+    def send_init_msg(self, agent_id) -> None:
         msg_init = MsgInitFromRequster(sender_id=self.id_, context=self.time_per_skill_unit,
                                            receiver_id=agent_id)
         self.outmessagebox.append(msg_init)
 
-    def init_relationships(self):
+    def init_relationships(self) -> None:
+        '''
+        iterate incoming messages and link incoming data with the relevant neighbor
+        '''
         for message in self.message_data.values():
                 self.neighbor_data[message[0].sender_id] = message[0].context
                 util = 0
@@ -93,7 +92,15 @@ class Requester(Agent):
                 self.neighbor_util[message[0].sender_id] = util
                 self.original_util[message[0].sender_id] = self.neighbor_util[message[0].sender_id]
 
-    def construct_skill_times(self, providers, final ):
+
+    def construct_skill_times(self, providers, final) -> dict:
+        '''
+        Receives a list of providers and their arrival times to a requester and sorts them into a timeline for each skill
+        :param providers: List of providers and their assignments
+        :param final: A boolean indicating (if False) weather to consider newly added assignments or (if True) to only
+        consider assignments that are permanent (those that were constructed in previous increments)
+        :return: a dict of dicts {skill: time : amount of agents }
+        '''
         res = {}
         for key in self.skill_set.keys():
             res[key] = {}
@@ -136,13 +143,15 @@ class Requester(Agent):
                         keep = False
                     elif keep:
                         res[timel][timeLine[timel][j + 1]] += 1
-
-
-
         return res
 
 
-    def final_utility(self):
+    def final_utility(self) -> float:
+        '''
+        borrowed utility function.
+        Was supplied to us by Mrs. Maya Lavie
+        :return: the calculated utility
+        '''
         all_util = 0
         for skill, amount_needed in self.skill_set.items():
             if amount_needed == 0:
@@ -180,7 +189,12 @@ class Requester(Agent):
         return round(all_util, 2)
 
 
-    def cap(self,team, max_required):
+    def cap(self,team, max_required) -> float:
+        '''
+        :param team: size of working team
+        :param max_required: maximal number os providers required for a selected skill
+        :return: a number between 0.5 and 1
+        '''
         # linear
         if team == 0:
             return 0

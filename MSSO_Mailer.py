@@ -25,9 +25,14 @@ class MSSO_Mailer(Mailer):
         self.dist_tresh = dist_thresh
         self.req = 0
         self.total_nclos = 0
+        self.iter_multip = 2
 
 
     def initiate(self) -> None:
+        '''
+        share relevant data between requesters and providers
+        and establish the relationship between them
+        '''
         #send initial messages from all(providers) to all (requesters) and visa versa
         for requester in self.Requesters.values():
             for neighbour in requester.neighbor_data.keys():
@@ -71,11 +76,14 @@ class MSSO_Mailer(Mailer):
            :param requester: the agent we want to apply fmr on
            :return list: a list of neighbours to detach
         '''
+
+
         self.req = requester
         neighbours_sorted = sorted(requester.neighbor_util.items(), key=cmp_to_key(self.heuristic_function))
-        for skill in self.req.skill_set:
+
+        for skill in requester.skill_set:
             selected_providers = []
-            for i in self.req.allocated_providers:
+            for i in requester.allocated_providers:
                 selected_providers.append(i[0])
             for provider_tuple in neighbours_sorted:
                 requester.simulation_times_for_utility = requester.construct_time_line(selected_providers, skill)
@@ -88,11 +96,19 @@ class MSSO_Mailer(Mailer):
                     if af - be != 0:
                         selected_providers.append(provider_tuple[0])
 
-            self.req.internal_fmr[skill] = copy.deepcopy(selected_providers)
+            requester.internal_fmr[skill] = copy.deepcopy(selected_providers)
 
 
 
     def heuristic_function(self,provider1 : tuple,provider2 : tuple) -> int:
+        '''
+        Comparator for sorting neighbors when picking subset in FMR
+        compares by distance first. if distance is within range use second criterion which is 'After_fmr'
+        an indicator if an agent was already assigned a requester or not in the current FMR.
+        :param provider1: First provider we compare to
+        :param provider2: the second provider in the list
+        :return: 1/-1
+        '''
         for i in self.Providers.keys():
             if self.Providers[i].id_ == provider1[0]:
                 this_agent = self.Providers[i]
@@ -111,13 +127,7 @@ class MSSO_Mailer(Mailer):
                 return 1
 
 
-    def ms_heuristic_function_helper(self,sum : int,target_sum :int,add_val : int) -> Any:
-        if target_sum >= sum:
-            return add_val
-        else:
-            return False
-
-    def remember(self):
+    def remember(self) -> None:
         '''
         remembers the assignment of a given iteration
         :return:
@@ -134,13 +144,19 @@ class MSSO_Mailer(Mailer):
         for provider in self.Providers.values():
             provider.chosen_requester = self.assignments_per_iteration[iteration_num][provider.id_]
 
-    def detach_neighbors(self):
+    def detach_neighbors(self) -> None:
+        '''
+        Detaches all neighbors on the graph in the problem
+        '''
         for provider in self.Providers.values():
             for requester in self.Requesters.values():
                 provider.remove_neighbour(requester)
                 requester.remove_neighbour(provider)
 
-    def assign_neighbors(self):
+    def assign_neighbors(self) -> None:
+        '''
+        Assign neighbors based on distance threshold and commonality of skills
+        '''
         for provider in self.Providers.values():
             for requester in self.Requesters.values():
                 distance = Calculate_Distance(provider.current_location, requester.current_location)
@@ -150,7 +166,13 @@ class MSSO_Mailer(Mailer):
                     requester.add_neighbour(provider)
 
     def iterate(self) -> int:
-        if self.iteration_num % 50 == 0 and self.iteration_num != 0:
+        '''
+        iteratre through the algorithm
+        '''
+
+        #increment of MaxSum every 20..30...40... etc iterations
+        if self.iteration_num % (self.iter_multip * 10) == 0 and self.iteration_num != 0:
+            self.iter_multip += 1
             self.recall(self.highest_iter)
             for provider in self.Providers.values():
                 provider.advance_time_via_choice()
@@ -161,7 +183,9 @@ class MSSO_Mailer(Mailer):
             self.assign_neighbors()
             self.initiate()
         self.remember()
-        if self.iteration_num % 50 == 5 and self.iteration_num != 0:
+
+        #wait 5 iterations and then add stochastic element
+        if self.iteration_num % (self.iter_multip * 10) == 5 and self.iteration_num != 0:
             for provider in self.Providers.values():
                 provider.up_mistake()
         return super().iterate()

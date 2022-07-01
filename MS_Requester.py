@@ -22,15 +22,14 @@ class MS_Requester(Requester):
         self.util_message_data = {}
         self.relationship_health = {}
         self.internal_fmr = {}
-        for skill in self.skill_set:
-            self.internal_fmr[skill] = [i for i in self.connections]
+        self.nclo = 0
 
 
     def full_reset(self):
         super().full_reset()
         self.offer = {}
         self.util_message_data = {}
-
+        #self.nclo = 0
 
     def reset_offers(self):
         for id in self.neighbor_data.keys():
@@ -161,26 +160,42 @@ class MS_Requester(Requester):
                 self.message_data[message.sender_id][1] = message
 
         self.inmessagebox.clear()
+        if self.internal_fmr == {}:
+            for skill in self.skill_set:
+                self.internal_fmr[skill] = [i for i in self.connections]
+
+    def update_nclo(self,table):
+        if len(table) == 0:
+            self.nclo += 0
+        else:
+            self.nclo += len(table) - 1
+        # self.nclo = 0
+        # for skill in self.internal_fmr:
+        #     self.nclo += len(self.internal_fmr[skill]) * len(self.internal_fmr[skill])
+
+    def set_nclo(self,set_val):
+        self.nclo = set_val
 
     def compute(self):
         self.open_mail()
-        max_skill = 0
-        max_val = 0
-        for i in self.internal_fmr.keys():
-            if len(self.internal_fmr[i]) >= max_val:
-                max_skill = i
-                max_val = len(self.internal_fmr[i])
-        if not self.internal_fmr:
-            self.nclo = 0
-        else:
-            self.nclo = len(self.internal_fmr[max_skill]) * len(self.internal_fmr[max_skill])
         for provider in self.connections.keys():
+            best_cases = {}
             for skill in self.skill_set:
                 produced_table = self.create_value_table(provider,skill)
-                produced_table = self.add_beliefs(produced_table,provider,skill)
-                selected_case = self.select_best_values(produced_table)
-                self.compile_offers(selected_case,provider,skill)
-                self.send_offer_msg(provider)
+                if len(produced_table) > 1:
+                    self.update_nclo(produced_table)
+                    produced_table = self.add_beliefs(produced_table,provider,skill)
+                    selected_case = self.select_best_values(produced_table)
+                    best_cases[skill] = selected_case
+            max_u = 0
+            max_skill = 0
+            for i in best_cases:
+                if best_cases[i][0][-1] >= max_u:
+                    max_u = best_cases[i][0][-1]
+                    max_skill = i
+            self.compile_offers(best_cases[max_skill],provider,max_skill)
+            self.send_offer_msg(provider)
+
 
     def send_offer_msg(self, neighbour: int) -> None:
         new_message = MsgUtilityOffer(self.id_, neighbour, self.offer[neighbour])
@@ -205,7 +220,8 @@ class MS_Requester(Requester):
         if after_assignment - before_assignment <= 0:
             calculated_offers = (0,skill)
         else:
-            calculated_offers = (1*(after_assignment - before_assignment),skill)
+            calculated_offers = (round(after_assignment - before_assignment,2),skill)
+
         self.offer[provider] = calculated_offers
 
 
