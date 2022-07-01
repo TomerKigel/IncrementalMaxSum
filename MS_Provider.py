@@ -1,7 +1,7 @@
 '''
 Author: Tomer kigel
 Contact info: e-mail: tomer.kigel@gmail.com
-              phone number: 0507650153
+              phone number: +972507650153
               github: https://github.com/TomerKigel
 '''
 import copy
@@ -171,6 +171,10 @@ class MS_Provider(Provider):
 
 
     def remove_neighbour(self, agent) -> None:
+        '''
+       remove neighbor and cleanup his data
+       :param agent: agent id or reference
+       '''
         super().remove_neighbour(agent)
         if type(agent) == int:
             if agent in self.Belief.keys():

@@ -90,9 +90,13 @@ def draw_problem_graph(win : GraphWin, problem : Problem):
                 thisline.setFill("red")
                 thisline.setOutline("red")
 
-# creates mailer and solves problems
-
-def solve_problems(win,problems_input, mailer_iteration_termination):
+def solve_problems(win,problems_input, mailer_iteration_termination) -> None:
+    '''
+    creates mailer and solves problems
+    :param win: window handler
+    :param problems_input: input
+    :param mailer_iteration_termination: maximum iteration
+    '''
     utilities_per_problem = []
     i = 0
     for problem in tqdm(problems_input):
@@ -123,7 +127,7 @@ def solve_problems(win,problems_input, mailer_iteration_termination):
 if __name__ == "__main__":
     # algorithm variables
     algorithm = 0  # 0=maxsum
-    mailer_iteration_termination = 200
+    mailer_iteration_termination = 2000
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables

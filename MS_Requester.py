@@ -1,7 +1,7 @@
 '''
 Author: Tomer kigel
 Contact info: e-mail: tomer.kigel@gmail.com
-              phone number: 0507650153
+              phone number: +972507650153
               github: https://github.com/TomerKigel
 '''
 import copy
@@ -25,20 +25,19 @@ class MS_Requester(Requester):
         self.nclo = 0
 
 
-    def full_reset(self):
+    def full_reset(self) -> None:
         super().full_reset()
         self.offer = {}
         self.util_message_data = {}
-        #self.nclo = 0
 
-    def reset_offers(self):
+    def reset_offers(self) -> None:
         for id in self.neighbor_data.keys():
             self.offer[id] = (0,0)
             self.relationship_health[id] = 1
             for elem in self.neighbor_data[id][3]:
                 self.offer[id] = (0,0)
 
-    def assemble_neighbour_assignments(self,skill,provider):
+    def assemble_neighbour_assignments(self,skill,provider) -> dict:
         output = {}
         for neighbour in self.connections.keys():
             if neighbour in self.internal_fmr[skill] and provider != neighbour:
@@ -48,7 +47,7 @@ class MS_Requester(Requester):
         return output
 
 
-    def create_value_table(self,provider,skill) -> list:
+    def create_value_table(self,provider : int,skill : int) -> list:
         assignments = self.assemble_neighbour_assignments(skill,provider)
         table = []
         keylist = list(assignments.keys())
@@ -59,15 +58,11 @@ class MS_Requester(Requester):
         permutation = utils.truth_table(keylist, amount_of_lines)
         for line in range (0,amount_of_lines):
             table.append(permutation[line])
-            table[line+1].append(self.case_utility(table,line+1,"marginal utility",skill))
+            table[line+1].append(self.case_utility(table,line+1,skill))
 
         return table
 
-    def case_utility(self,table : list[int],line : int,policy : string,skill) -> int:
-        if policy == "marginal utility":
-            pass
-        else:
-            pass
+    def case_utility(self,table : list[int],line : int,skill : int) -> int:
         index = 0
         providers_list = []
         for key in table[line]:
@@ -81,7 +76,7 @@ class MS_Requester(Requester):
         util = self.final_utility()
         return util
 
-    def construct_time_line(self, providers_list,skill):
+    def construct_time_line(self, providers_list : list ,skill : int) -> dict:
         list_of_arrivals = []
         index = 0
         for provider in providers_list:
@@ -97,7 +92,7 @@ class MS_Requester(Requester):
             index +=1
         return self.construct_skill_times(list_of_arrivals,False)
 
-    def add_beliefs(self,table : list,provider,skill):
+    def add_beliefs(self,table : list,provider : int,skill : int) -> list:
         agents_beliefs = {}
         for key in self.connections.keys():
             if key != provider:
@@ -164,19 +159,16 @@ class MS_Requester(Requester):
             for skill in self.skill_set:
                 self.internal_fmr[skill] = [i for i in self.connections]
 
-    def update_nclo(self,table):
+    def update_nclo(self,table : list) -> None:
         if len(table) == 0:
             self.nclo += 0
         else:
             self.nclo += len(table) - 1
-        # self.nclo = 0
-        # for skill in self.internal_fmr:
-        #     self.nclo += len(self.internal_fmr[skill]) * len(self.internal_fmr[skill])
 
-    def set_nclo(self,set_val):
+    def set_nclo(self,set_val) -> None:
         self.nclo = set_val
 
-    def compute(self):
+    def compute(self) -> None:
         self.open_mail()
         for provider in self.connections.keys():
             best_cases = {}
@@ -194,18 +186,18 @@ class MS_Requester(Requester):
                     max_u = best_cases[i][0][-1]
                     max_skill = i
             self.compile_offers(best_cases[max_skill],provider,max_skill)
-            self.send_offer_msg(provider)
+        self.generate_result_messages()
 
 
     def send_offer_msg(self, neighbour: int) -> None:
         new_message = MsgUtilityOffer(self.id_, neighbour, self.offer[neighbour])
         self.outmessagebox.append(new_message)
 
-    def generate_result_messages(self):
+    def generate_result_messages(self) -> None:
         for neighbour in self.neighbor_data.keys():
             self.send_offer_msg(neighbour)
 
-    def compile_offers(self,selected_case : list,provider : int,skill):
+    def compile_offers(self,selected_case : list,provider : int,skill) -> None:
         providers_list = []
         for i in range(0,len(selected_case[0])-1):
             if selected_case[0][i] == 1:
@@ -225,13 +217,22 @@ class MS_Requester(Requester):
         self.offer[provider] = calculated_offers
 
 
-    def calculate_required_utility(self):
+    def calculate_required_utility(self) -> float:
+        '''
+        calculate overall maximal required utility
+        :return: utility
+        '''
         utility = 0
         for key in self.max_util.keys():
             utility += self.max_util[key]
         return utility
 
+
     def remove_neighbour(self, agent) -> None:
+        '''
+        remove neighbor and cleanup his data
+        :param agent: agent id or reference
+        '''
         super().remove_neighbour(agent)
         if type(agent) == int:
             if agent in self.offer.keys():
@@ -252,7 +253,14 @@ class MS_Requester(Requester):
         for i in messages_to_remove:
             del self.message_data[i]
 
-    def conjoin_simulation_times(self, t_a_p, simulation_times_for_utility):
+
+    def conjoin_simulation_times(self, t_a_p, simulation_times_for_utility) -> dict:
+        '''
+        Conjoins two times lines into one
+        :param t_a_p: Source to append to destination
+        :param simulation_times_for_utility: Destination
+        :return: dict of dicts {skill : time : amount of agents }
+        '''
         for key in simulation_times_for_utility.keys():
             index_times = 0
             sorted_times = list(simulation_times_for_utility[key].keys())
