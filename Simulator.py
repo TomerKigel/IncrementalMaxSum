@@ -175,9 +175,9 @@ if __name__ == "__main__":
     utility_type = 0  # 0= iterative, 1=gale-shapley, 2=according to location,
 
     # problem variables
-    number_of_problems = 1
-    number_of_providers = 10
-    number_of_requesters = 15
+    number_of_problems = 30
+    number_of_providers = 20
+    number_of_requesters = 5
     location_min_x = 1
     location_max_x = 50
     location_min_y = 1
@@ -214,10 +214,10 @@ if __name__ == "__main__":
 
 
 
-    win = GraphWin(width=800, height=800)  # create a window
-    win.setCoords(-5, -5, 55, 55)  # set the coordinates of the window; bottom left is (-5, -5) and top right is (55, 55)
-    utilities_per_problem = solve_problems(win,problems_input=problems, mailer_iteration_termination=mailer_iteration_termination)
-    win.close()
+    #win = GraphWin(width=800, height=800)  # create a window
+    #win.setCoords(-5, -5, 55, 55)  # set the coordinates of the window; bottom left is (-5, -5) and top right is (55, 55)
+    utilities_per_problem = solve_problems(None,problems_input=problems, mailer_iteration_termination=mailer_iteration_termination)
+    #win.close()
     nclo_stamps = create_nclo_stamps(utilities_per_problem)
     avg = avarage_utils(utilities_per_problem,nclo_stamps)
 
